@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Articulate AI Coach</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Articulate AI</h1>
+            <p>Your Personal Communication Coach</p>
+        </header>
+
+        <section class="practice-section">
+            <h2><i class="fa-solid fa-microphone-lines"></i> Articulation Practice</h2>
+            <p>Select a common topic to practice your response. The AI will then analyze your articulation.</p>
+            <div class="practice-topics">
+                <button class="practice-btn" data-topic="introduction"><i class="fa-solid fa-user"></i> Tell me about yourself</button>
+                <button class="practice-btn" data-topic="hobby"><i class="fa-solid fa-book"></i> Talk about a hobby</button>
+                <button class="practice-btn" data-topic="day"><i class="fa-solid fa-sun"></i> How was your day?</button>
+            </div>
+            <div id="practicePrompt" class="practice-prompt" style="display: none;"></div>
+        </section>
+
+        <main class="main-card">
+            <section class="input-section">
+                <div class="textarea-wrapper"><textarea id="userInput" placeholder=" " rows="5"></textarea><label for="userInput">Enter your text here or respond to a practice prompt...</label></div>
+                <div class="context-group">
+                    <label><i class="fa-solid fa-wand-magic-sparkles"></i> Choose Your Goal</label>
+                    <div class="context-selector">
+                        <button class="context-btn active" data-context="prep">💼 Professional Update</button>
+                        <button class="context-btn" data-context="star">⭐ Interview Answer</button>
+                        <button class="context-btn" data-context="logos">🧠 Persuasive Pitch</button>
+                        <button class="context-btn" data-context="5ws">😎 Casual Conversation</button>
+                    </div>
+                </div>
+                <button class="process-btn" id="processBtn">
+                    <span class="btn-text">Enhance My Writing</span>
+                    <span class="btn-loader"><i class="fa-solid fa-spinner fa-spin"></i> Processing...</span>
+                </button>
+            </section>
+            
+            <div class="loading-skeleton" id="loadingSkeleton" style="display: none;"></div>
+
+            <section class="results-section" id="results" style="display: none;">
+                <div class="stage-card" id="stage0">
+                    <h3><i class="fa-solid fa-chart-line"></i> Your Communication Score</h3>
+                    <div class="score-dashboard">
+                        <div class="overall-score-container">
+                            <span id="overallScore">0</span>
+                            <p>Overall Score</p>
+                        </div>
+                        <div class="detailed-scores" id="detailedScores"></div>
+                    </div>
+                    <div class="explanation" id="keyAdviceContainer">
+                        <h5><i class="fa-solid fa-key"></i> Your Key Action Item</h5>
+                        <p id="keyAdvice"></p>
+                    </div>
+                </div>
+
+                <div class="stage-card" id="stage1">
+                    <h3><i class="fa-solid fa-pen-fancy"></i> Stage 1: Vocabulary Enhancement</h3>
+                    <div id="stage1-comparison"></div>
+                    <div class="explanation"><h5><i class="fa-solid fa-lightbulb"></i> Key Improvements</h5><p id="stage1Explanation"></p></div>
+                    <h4><i class="fa-solid fa-layer-group"></i> Interactive Flashcards</h4>
+                    <div class="flashcards" id="flashcards"></div>
+                </div>
+
+                <div class="stage-card" id="stage2">
+                    <h3><i class="fa-solid fa-sitemap"></i> Stage 2: Structural Flow Coaching</h3>
+                    <div class="comparison">
+                        <div class="before"><h4>Previous Version</h4><p id="stage2Before"></p></div>
+                        <div class="after"><h4>Structurally Enhanced</h4><p id="stage2After"></p></div>
+                    </div>
+                    <div class="explanation" id="method-explanation">
+                        <h5 id="methodName"></h5>
+                        <p id="methodDescription"></p>
+                    </div>
+                     <div id="methodBreakdown"></div>
+                </div>
+
+                <div class="stage-card" id="stage3">
+                    <h3><i class="fa-solid fa-dumbbell"></i> Stage 3: Practice Your New Skill</h3>
+                    <div id="practice-exercise">
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <footer class="footer"><p>Powered by Gemini</p></footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
