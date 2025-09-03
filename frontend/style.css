@@ -1,0 +1,296 @@
+/* --- Final Professional Redesign (Green Theme) --- */
+
+/* 1. Root Variables & Global Styles */
+:root {
+    --primary-color: #16a34a; /* Calming Green */
+    --primary-color-light: #dcfce7;
+    --primary-color-dark: #14532d;
+    --bg-color: #f8fafc;
+    --card-bg-color: #ffffff;
+    --text-color: #0f172a;
+    --text-light-color: #475569;
+    --border-color: #e2e8f0;
+    --font-family: 'Manrope', sans-serif;
+    --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.07);
+    --border-radius: 12px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.6;
+    background: linear-gradient(170deg, #f0fdf4, #ffffff 15%);
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+}
+
+/* 2. Header and Footer */
+.header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.header h1 {
+    font-size: 2.75rem;
+    font-weight: 800;
+    color: var(--primary-color-dark);
+}
+
+.header p {
+    font-size: 1.125rem;
+    color: var(--text-light-color);
+    margin-top: 0.25rem;
+}
+
+.footer {
+    text-align: center;
+    margin-top: 4rem;
+    font-size: 0.875rem;
+    color: #94a3b8;
+}
+
+/* 3. Main Cards & Sections */
+.main-card, .practice-section, .stage-card {
+    background-color: var(--card-bg-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+    padding: 2rem;
+    border: 1px solid var(--border-color);
+}
+
+.practice-section, .stage-card {
+    margin-bottom: 2rem;
+}
+
+/* Input Section */
+#userInput {
+    width: 100%;
+    min-height: 120px;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-family: var(--font-family);
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    resize: vertical;
+}
+
+#userInput:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.2);
+}
+
+.context-group {
+    margin: 1.5rem 0;
+}
+
+.context-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.context-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.context-btn {
+    padding: 0.6rem 1.1rem;
+    border: 1px solid var(--border-color);
+    background-color: #fff;
+    color: var(--text-light-color);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.context-btn:hover {
+    background-color: var(--primary-color-light);
+    color: var(--primary-color-dark);
+}
+
+.context-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.process-btn {
+    width: 100%;
+    padding: 1rem;
+    border: none;
+    background-color: var(--primary-color);
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s, opacity 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.process-btn:hover {
+    background-color: var(--primary-color-dark);
+}
+
+.btn-loader {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.process-btn.loading .btn-text { display: none; }
+.process-btn.loading .btn-loader { display: flex; }
+
+.process-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    background-color: var(--primary-color-dark);
+}
+
+/* Articulation Practice Section */
+.practice-section h2 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+.practice-topics { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; }
+
+.practice-btn {
+    padding: 0.75rem 1.25rem;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.practice-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+.practice-prompt {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background-color: var(--primary-color-light);
+    border-radius: 8px;
+    color: var(--primary-color-dark);
+    font-weight: 500;
+}
+
+/* 4. Results Section */
+.results-section h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.score-dashboard {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.overall-score-container {
+    text-align: center;
+    background-color: var(--bg-color);
+    padding: 1.5rem 2rem;
+    border-radius: var(--border-radius);
+    min-width: 150px;
+}
+
+#overallScore {
+    font-size: 4rem;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--primary-color);
+}
+
+.overall-score-container p {
+    margin-top: 0.5rem;
+    font-weight: 600;
+    color: var(--text-light-color);
+}
+
+.detailed-scores { flex-grow: 1; min-width: 300px; }
+
+.score-item {
+    display: grid;
+    grid-template-columns: 120px 50px 1fr;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.score-item-bar-container {
+    height: 10px;
+    background-color: #e2e8f0;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.score-item-bar { height: 100%; border-radius: 5px; }
+
+.explanation {
+    background-color: var(--bg-color);
+    padding: 1.25rem;
+    border-radius: 8px;
+    margin-top: 2rem;
+    border-left: 4px solid var(--primary-color);
+}
+
+.explanation h5 { font-size: 1.1rem; margin-bottom: 0.25rem; }
+
+.comparison { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; }
+.comparison .before, .comparison .after { padding: 1.5rem; background-color: var(--bg-color); border-radius: 8px; }
+
+.flashcards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+
+.flashcard {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    background-color: #fff;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.flashcard:hover { transform: translateY(-3px); box-shadow: var(--card-shadow); }
+
+#methodBreakdown, #practice-exercise { margin-top: 2rem; }
+.breakdown-list, .guidance-list { list-style: none; margin-top: 1rem; padding-left: 0; }
+.breakdown-list li, .guidance-list li {
+    background-color: var(--bg-color);
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    border-left: 3px solid var(--border-color);
+}
+
+.breakdown-list li strong, .guidance-list li strong {
+    color: var(--primary-color);
+    display: block;
+    margin-bottom: 0.25rem;
+}
