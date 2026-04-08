@@ -320,22 +320,60 @@ class ArticulateCoach {
 
     displayTranscriptPreview(data) {
         this.transcriptText.textContent = data.transcript || '(no transcript)';
+        this.fillerHighlightActive = false;
 
         const m = data.speech_metrics || {};
         const fillerTotal = m.total_filler_words || 0;
         const wpm = m.words_per_minute || 0;
         const duration = m.duration_seconds ? this.formatTime(Math.round(m.duration_seconds)) : '—';
 
+        const fillerClickable = fillerTotal > 0
+            ? `id="fillerStatChip" class="quick-stat ${fillerTotal > 5 ? 'stat-warn' : ''} filler-chip" title="Click to highlight fillers"`
+            : `class="quick-stat ${fillerTotal > 5 ? 'stat-warn' : ''}"`;
+
         this.audioQuickStats.innerHTML = `
             <div class="quick-stat"><i class="fa-solid fa-clock"></i> ${duration}</div>
             <div class="quick-stat"><i class="fa-solid fa-tachometer-alt"></i> ${wpm} wpm</div>
-            <div class="quick-stat ${fillerTotal > 5 ? 'stat-warn' : ''}">
+            <div ${fillerClickable}>
                 <i class="fa-solid fa-comment-slash"></i> ${fillerTotal} filler word${fillerTotal !== 1 ? 's' : ''}
             </div>
             <div class="quick-stat"><i class="fa-solid fa-pause"></i> ${m.total_pauses || 0} pause${(m.total_pauses || 0) !== 1 ? 's' : ''}</div>
         `;
 
+        if (fillerTotal > 0) {
+            document.getElementById('fillerStatChip').addEventListener('click', () => {
+                this.toggleFillerHighlight();
+            });
+        }
+
         this.transcriptPreview.style.display = 'block';
+    }
+
+    toggleFillerHighlight() {
+        const chip = document.getElementById('fillerStatChip');
+        const fillerWords = (this.audioMetrics?.filler_words || []).map(f => f.word);
+        const transcript = this.audioMetrics?.transcript || '';
+
+        if (!fillerWords.length) return;
+
+        this.fillerHighlightActive = !this.fillerHighlightActive;
+        chip.classList.toggle('filler-chip-active', this.fillerHighlightActive);
+
+        if (this.fillerHighlightActive) {
+            // Build regex that matches any filler word, whole-word, case-insensitive
+            const pattern = fillerWords
+                .map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))  // escape regex chars
+                .join('|');
+            const regex = new RegExp(`\\b(${pattern})\\b`, 'gi');
+
+            this.transcriptText.innerHTML = transcript.replace(
+                regex,
+                match => `<mark class="filler-highlight">${match}</mark>`
+            );
+        } else {
+            // Reset to plain text
+            this.transcriptText.textContent = transcript;
+        }
     }
 
     // ── Process Audio (full coaching pipeline) ───────────────────────────────

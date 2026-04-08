@@ -604,6 +604,34 @@ body {
     color: #854d0e;
 }
 
+.filler-chip {
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.filler-chip:hover {
+    background: #dcfce7;
+    border-color: var(--primary-color);
+    color: var(--primary-color-dark);
+}
+
+.filler-chip-active {
+    background: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: #fff !important;
+}
+
+mark.filler-highlight {
+    background: #bbf7d0;
+    color: #14532d;
+    border-radius: 3px;
+    padding: 0 3px;
+    font-weight: 700;
+    border-bottom: 2px solid var(--primary-color);
+    text-decoration: none;
+}
+
 /* ── Delivery Scores (inside results) ────────────────────────────────────── */
 .delivery-scores-container {
     margin-top: 1.5rem;
