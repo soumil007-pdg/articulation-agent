@@ -320,22 +320,60 @@ class ArticulateCoach {
 
     displayTranscriptPreview(data) {
         this.transcriptText.textContent = data.transcript || '(no transcript)';
+        this.fillerHighlightActive = false;
 
         const m = data.speech_metrics || {};
         const fillerTotal = m.total_filler_words || 0;
         const wpm = m.words_per_minute || 0;
         const duration = m.duration_seconds ? this.formatTime(Math.round(m.duration_seconds)) : '—';
 
+        const fillerClickable = fillerTotal > 0
+            ? `id="fillerStatChip" class="quick-stat ${fillerTotal > 5 ? 'stat-warn' : ''} filler-chip" title="Click to highlight fillers"`
+            : `class="quick-stat ${fillerTotal > 5 ? 'stat-warn' : ''}"`;
+
         this.audioQuickStats.innerHTML = `
             <div class="quick-stat"><i class="fa-solid fa-clock"></i> ${duration}</div>
             <div class="quick-stat"><i class="fa-solid fa-tachometer-alt"></i> ${wpm} wpm</div>
-            <div class="quick-stat ${fillerTotal > 5 ? 'stat-warn' : ''}">
+            <div ${fillerClickable}>
                 <i class="fa-solid fa-comment-slash"></i> ${fillerTotal} filler word${fillerTotal !== 1 ? 's' : ''}
             </div>
             <div class="quick-stat"><i class="fa-solid fa-pause"></i> ${m.total_pauses || 0} pause${(m.total_pauses || 0) !== 1 ? 's' : ''}</div>
         `;
 
+        if (fillerTotal > 0) {
+            document.getElementById('fillerStatChip').addEventListener('click', () => {
+                this.toggleFillerHighlight();
+            });
+        }
+
         this.transcriptPreview.style.display = 'block';
+    }
+
+    toggleFillerHighlight() {
+        const chip = document.getElementById('fillerStatChip');
+        const fillerWords = (this.audioMetrics?.filler_words || []).map(f => f.word);
+        const transcript = this.audioMetrics?.transcript || '';
+
+        if (!fillerWords.length) return;
+
+        this.fillerHighlightActive = !this.fillerHighlightActive;
+        chip.classList.toggle('filler-chip-active', this.fillerHighlightActive);
+
+        if (this.fillerHighlightActive) {
+            // Build regex that matches any filler word, whole-word, case-insensitive
+            const pattern = fillerWords
+                .map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))  // escape regex chars
+                .join('|');
+            const regex = new RegExp(`\\b(${pattern})\\b`, 'gi');
+
+            this.transcriptText.innerHTML = transcript.replace(
+                regex,
+                match => `<mark class="filler-highlight">${match}</mark>`
+            );
+        } else {
+            // Reset to plain text
+            this.transcriptText.textContent = transcript;
+        }
     }
 
     // ── Process Audio (full coaching pipeline) ───────────────────────────────
@@ -358,33 +396,77 @@ class ArticulateCoach {
         this.loadingSkeleton.style.display = 'block';
         this.resultsContainer.style.display = 'none';
 
+        // Stage 1: scoring (content + delivery) — both diagnostic, run in parallel
+        // Hard stop if either fails — nothing meaningful to show without scores
         try {
-            // Run all coaching stages using the transcript
-            const [scoreResult, deliveryResult, stage1Result, stage2Result, exercises] = await Promise.all([
+            const [scoreResult, deliveryResult] = await this.withRetry(() => Promise.all([
                 this.scoreText(transcript),
                 this.scoreDelivery(this.audioMetrics),
-                this.enhanceVocabulary(transcript),
-                this.enhanceStructure(transcript, this.currentContext),
-                this.generateExercises(this.currentTopic, this.currentContext),
-            ]);
-
+            ]));
             this.displayScore(scoreResult);
             this.displayDeliveryScore(deliveryResult);
-            this.displayStage1(transcript, stage1Result);
-            this.displayStage2(transcript, stage2Result);
-            this.displayStage3(exercises);
-
+        } catch (err) {
+            console.error('Scoring failed after all retries:', err);
             this.loadingSkeleton.style.display = 'none';
             this.resultsContainer.style.display = 'block';
-
-        } catch (error) {
-            console.error('Audio coaching error:', error);
-            this.loadingSkeleton.style.display = 'none';
-            this.showError(`Error: ${error.message}. Please check your backend server and API key.`);
-        } finally {
+            this.showError(`Scoring failed: ${err.message}. Please check your connection and try again.`);
             this.processAudioBtn.disabled = false;
             this.processAudioBtn.classList.remove('loading');
+            return;
         }
+
+        // Stage 2: vocab — retry × 3, fallback = transcript passthrough
+        let vocabResult;
+        try {
+            vocabResult = await this.withRetry(() => this.enhanceVocabulary(transcript));
+            this.displayStage1(transcript, vocabResult);
+        } catch (err) {
+            console.warn('Vocab stage failed after all retries, skipping…', err.message);
+            vocabResult = { enhancedText: transcript, flashcards: [], explanation: '' };
+            this.displayStageSkipped('stage1Section', 'Vocabulary enhancement unavailable right now — skipped.');
+        }
+
+        // Stage 3: structure — uses vocab output (or original transcript if vocab skipped)
+        let structResult;
+        try {
+            structResult = await this.withRetry(() =>
+                this.enhanceStructure(vocabResult.enhancedText, this.currentContext)
+            );
+            this.displayStage2(vocabResult.enhancedText, structResult);
+        } catch (err) {
+            console.warn('Structure stage failed after all retries, skipping…', err.message);
+            structResult = {
+                structurallyEnhancedText: vocabResult.enhancedText,
+                method: { name: 'Framework', description: '' },
+                breakdown: [],
+            };
+            this.displayStageSkipped('stage2Section', 'Structural coaching unavailable right now — skipped.');
+        }
+
+        // Stage 4: exercises — uses both; generic fallback if all retries fail
+        try {
+            const exercises = await this.withRetry(() =>
+                this.generateExercises(this.currentTopic, this.currentContext, vocabResult, structResult)
+            );
+            this.displayStage3(exercises);
+        } catch (err) {
+            console.warn('Exercises stage failed after all retries, using generic fallback…', err.message);
+            this.displayStage3({
+                title: 'Practice Exercise',
+                newTopic: 'Think of a recent experience at work or school.',
+                instructions: 'Structure your response clearly and use precise language.',
+                guidance: [
+                    { step: 'Opening', question: 'What is the main point you want to make?' },
+                    { step: 'Body',    question: 'What evidence or example supports it?' },
+                    { step: 'Close',   question: 'What is your call to action or conclusion?' },
+                ],
+            });
+        }
+
+        this.loadingSkeleton.style.display = 'none';
+        this.resultsContainer.style.display = 'block';
+        this.processAudioBtn.disabled = false;
+        this.processAudioBtn.classList.remove('loading');
     }
 
     // ── Delivery Scoring (audio-specific Gemini call) ────────────────────────
@@ -472,30 +554,72 @@ class ArticulateCoach {
         document.getElementById('deliveryScoresContainer').style.display = 'none';
         document.getElementById('deliveryFeedbackContainer').style.display = 'none';
 
+        // Stage 1: scoring — hard stop if fails (nothing meaningful to show without it)
         try {
-            const scoreResult  = await this.scoreText(input);
+            const scoreResult = await this.withRetry(() => this.scoreText(input));
             this.displayScore(scoreResult);
-
-            const stage1Result = await this.enhanceVocabulary(input);
-            this.displayStage1(input, stage1Result);
-
-            const stage2Result = await this.enhanceStructure(input, this.currentContext);
-            this.displayStage2(input, stage2Result);
-
-            const exercises    = await this.generateExercises(this.currentTopic, this.currentContext);
-            this.displayStage3(exercises);
-
+        } catch (err) {
+            console.error('Scoring failed after all retries:', err);
             this.loadingSkeleton.style.display = 'none';
             this.resultsContainer.style.display = 'block';
-
-        } catch (error) {
-            console.error('Processing error:', error);
-            this.loadingSkeleton.style.display = 'none';
-            this.showError(`A critical error occurred: ${error.message}. Please check your backend server and API key.`);
-        } finally {
+            this.showError(`Scoring failed: ${err.message}. Please check your connection and try again.`);
             this.processBtn.disabled = false;
             this.processBtn.classList.remove('loading');
+            return;
         }
+
+        // Stage 2: vocab — retry × 3, fallback = original text passthrough
+        let vocabResult;
+        try {
+            vocabResult = await this.withRetry(() => this.enhanceVocabulary(input));
+            this.displayStage1(input, vocabResult);
+        } catch (err) {
+            console.warn('Vocab stage failed after all retries, skipping…', err.message);
+            vocabResult = { enhancedText: input, flashcards: [], explanation: '' };
+            this.displayStageSkipped('stage1Section', 'Vocabulary enhancement unavailable right now — skipped.');
+        }
+
+        // Stage 3: structure — uses vocab output (or original if vocab was skipped)
+        let structResult;
+        try {
+            structResult = await this.withRetry(() =>
+                this.enhanceStructure(vocabResult.enhancedText, this.currentContext)
+            );
+            this.displayStage2(vocabResult.enhancedText, structResult);
+        } catch (err) {
+            console.warn('Structure stage failed after all retries, skipping…', err.message);
+            structResult = {
+                structurallyEnhancedText: vocabResult.enhancedText,
+                method: { name: 'Framework', description: '' },
+                breakdown: [],
+            };
+            this.displayStageSkipped('stage2Section', 'Structural coaching unavailable right now — skipped.');
+        }
+
+        // Stage 4: exercises — uses both; if fails show a generic fallback exercise
+        try {
+            const exercises = await this.withRetry(() =>
+                this.generateExercises(this.currentTopic, this.currentContext, vocabResult, structResult)
+            );
+            this.displayStage3(exercises);
+        } catch (err) {
+            console.warn('Exercises stage failed after all retries, using generic fallback…', err.message);
+            this.displayStage3({
+                title: 'Practice Exercise',
+                newTopic: 'Think of a recent experience at work or school.',
+                instructions: 'Structure your response clearly and use precise language.',
+                guidance: [
+                    { step: 'Opening', question: 'What is the main point you want to make?' },
+                    { step: 'Body',    question: 'What evidence or example supports it?' },
+                    { step: 'Close',   question: 'What is your call to action or conclusion?' },
+                ],
+            });
+        }
+
+        this.loadingSkeleton.style.display = 'none';
+        this.resultsContainer.style.display = 'block';
+        this.processBtn.disabled = false;
+        this.processBtn.classList.remove('loading');
     }
 
     // ── Gemini Coaching Stages ───────────────────────────────────────────────
@@ -639,20 +763,33 @@ class ArticulateCoach {
         breakdownContainer.appendChild(breakdownList);
     }
 
-    async generateExercises(originalTopic, context) {
+    async generateExercises(originalTopic, context, vocabData, structureData) {
         const prompts = {
             introduction: "Tell me about a project you are proud of.",
             hobby:        "Describe a skill you would like to learn and why.",
             day:          "Talk about a challenge you recently overcame.",
         };
         const newTopic   = prompts[originalTopic] || "Describe an interesting article you recently read.";
-        const methodName = document.getElementById('methodName').textContent;
+        const methodName = structureData?.method?.name || document.getElementById('methodName').textContent;
+
+        // Build context from previous pipeline stages
+        const vocabUpgrades = (vocabData?.flashcards || [])
+            .map(c => `"${c.original}" → "${c.new}"`)
+            .join(', ') || 'none';
 
         const prompt = `
-            Create a practice exercise for a user who just learned the "${methodName}" framework.
-            New Topic: "${newTopic}". Provide guiding questions based on the framework.
+            Create a practice exercise for a user who has just completed a two-stage coaching pipeline:
+            1. Vocabulary upgrade — they improved these specific words: ${vocabUpgrades}
+            2. Structural rewrite — they applied the "${methodName}" framework to organise their thoughts
+
+            New Practice Topic: "${newTopic}"
+
+            Design guiding questions that help them practice BOTH improvements together:
+            - Encourage use of the upgraded vocabulary words naturally
+            - Guide them to follow the "${methodName}" framework step by step
+
             Respond in this exact JSON format:
-            {"title":"Practice the ${methodName}","newTopic":"${newTopic}","instructions":"Use the guiding questions below to structure your thoughts on the new topic.","guidance":[{"step":"...","question":"..."}]}
+            {"title":"Practice: Vocab + ${methodName}","newTopic":"${newTopic}","instructions":"Apply both your vocabulary upgrades and the ${methodName} framework to this new topic.","guidance":[{"step":"...","question":"..."}]}
         `;
         const response = await this.callGeminiAPI(prompt);
         return JSON.parse(response);
@@ -667,6 +804,33 @@ class ArticulateCoach {
                 ${data.guidance.map(item => `<li><strong>${item.step}:</strong> ${item.question}</li>`).join('')}
             </ul>
         `;
+    }
+
+    // ── Retry & Fallback Helpers ─────────────────────────────────────────────
+
+    // Retries an async fn up to maxAttempts with exponential backoff.
+    // Throws on the last failure so callers can handle it.
+    async withRetry(fn, maxAttempts = 3, baseDelay = 1000) {
+        let delay = baseDelay;
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                return await fn();
+            } catch (err) {
+                if (attempt === maxAttempts) throw err;
+                console.warn(`Attempt ${attempt} failed, retrying in ${delay}ms…`, err.message);
+                await new Promise(r => setTimeout(r, delay));
+                delay *= 2; // 1s → 2s → 4s
+            }
+        }
+    }
+
+    // Shows a yellow "skipped" banner inside a section when a stage is bypassed.
+    displayStageSkipped(sectionId, message) {
+        const section = document.getElementById(sectionId);
+        if (section) {
+            section.innerHTML = `<div class="stage-skipped">⚠️ ${message}</div>`;
+            section.style.display = 'block';
+        }
     }
 
     // ── API Helper ───────────────────────────────────────────────────────────
