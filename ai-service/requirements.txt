@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+openai-whisper
+torch
+torchaudio
+soundfile
+speechbrain
+pydantic
+python-multipart
