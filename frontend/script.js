@@ -397,19 +397,25 @@ class ArticulateCoach {
         this.resultsContainer.style.display = 'none';
 
         try {
-            // Run all coaching stages using the transcript
-            const [scoreResult, deliveryResult, stage1Result, stage2Result, exercises] = await Promise.all([
+            // Scores are diagnostic (independent) → run in parallel
+            const [scoreResult, deliveryResult] = await Promise.all([
                 this.scoreText(transcript),
                 this.scoreDelivery(this.audioMetrics),
-                this.enhanceVocabulary(transcript),
-                this.enhanceStructure(transcript, this.currentContext),
-                this.generateExercises(this.currentTopic, this.currentContext),
             ]);
-
             this.displayScore(scoreResult);
             this.displayDeliveryScore(deliveryResult);
-            this.displayStage1(transcript, stage1Result);
-            this.displayStage2(transcript, stage2Result);
+
+            // Improvement stages are a pipeline → each feeds into the next
+            // Stage 2: vocab enhancement on original transcript → enhanced_v1
+            const vocabResult  = await this.enhanceVocabulary(transcript);
+            this.displayStage1(transcript, vocabResult);
+
+            // Stage 3: structure on vocab-improved text → enhanced_v2
+            const structResult = await this.enhanceStructure(vocabResult.enhancedText, this.currentContext);
+            this.displayStage2(vocabResult.enhancedText, structResult);
+
+            // Stage 4: exercises context-aware of both improvements
+            const exercises    = await this.generateExercises(this.currentTopic, this.currentContext, vocabResult, structResult);
             this.displayStage3(exercises);
 
             this.loadingSkeleton.style.display = 'none';
@@ -511,16 +517,20 @@ class ArticulateCoach {
         document.getElementById('deliveryFeedbackContainer').style.display = 'none';
 
         try {
+            // Stage 1: diagnostic scoring on original text
             const scoreResult  = await this.scoreText(input);
             this.displayScore(scoreResult);
 
-            const stage1Result = await this.enhanceVocabulary(input);
-            this.displayStage1(input, stage1Result);
+            // Stage 2: vocabulary enhancement on original text → produces enhanced_v1
+            const vocabResult  = await this.enhanceVocabulary(input);
+            this.displayStage1(input, vocabResult);
 
-            const stage2Result = await this.enhanceStructure(input, this.currentContext);
-            this.displayStage2(input, stage2Result);
+            // Stage 3: structure enhancement on vocab-improved text (enhanced_v1) → enhanced_v2
+            const structResult = await this.enhanceStructure(vocabResult.enhancedText, this.currentContext);
+            this.displayStage2(vocabResult.enhancedText, structResult);
 
-            const exercises    = await this.generateExercises(this.currentTopic, this.currentContext);
+            // Stage 4: exercises aware of both vocab upgrades and structural framework applied
+            const exercises    = await this.generateExercises(this.currentTopic, this.currentContext, vocabResult, structResult);
             this.displayStage3(exercises);
 
             this.loadingSkeleton.style.display = 'none';
@@ -677,20 +687,33 @@ class ArticulateCoach {
         breakdownContainer.appendChild(breakdownList);
     }
 
-    async generateExercises(originalTopic, context) {
+    async generateExercises(originalTopic, context, vocabData, structureData) {
         const prompts = {
             introduction: "Tell me about a project you are proud of.",
             hobby:        "Describe a skill you would like to learn and why.",
             day:          "Talk about a challenge you recently overcame.",
         };
         const newTopic   = prompts[originalTopic] || "Describe an interesting article you recently read.";
-        const methodName = document.getElementById('methodName').textContent;
+        const methodName = structureData?.method?.name || document.getElementById('methodName').textContent;
+
+        // Build context from previous pipeline stages
+        const vocabUpgrades = (vocabData?.flashcards || [])
+            .map(c => `"${c.original}" → "${c.new}"`)
+            .join(', ') || 'none';
 
         const prompt = `
-            Create a practice exercise for a user who just learned the "${methodName}" framework.
-            New Topic: "${newTopic}". Provide guiding questions based on the framework.
+            Create a practice exercise for a user who has just completed a two-stage coaching pipeline:
+            1. Vocabulary upgrade — they improved these specific words: ${vocabUpgrades}
+            2. Structural rewrite — they applied the "${methodName}" framework to organise their thoughts
+
+            New Practice Topic: "${newTopic}"
+
+            Design guiding questions that help them practice BOTH improvements together:
+            - Encourage use of the upgraded vocabulary words naturally
+            - Guide them to follow the "${methodName}" framework step by step
+
             Respond in this exact JSON format:
-            {"title":"Practice the ${methodName}","newTopic":"${newTopic}","instructions":"Use the guiding questions below to structure your thoughts on the new topic.","guidance":[{"step":"...","question":"..."}]}
+            {"title":"Practice: Vocab + ${methodName}","newTopic":"${newTopic}","instructions":"Apply both your vocabulary upgrades and the ${methodName} framework to this new topic.","guidance":[{"step":"...","question":"..."}]}
         `;
         const response = await this.callGeminiAPI(prompt);
         return JSON.parse(response);
