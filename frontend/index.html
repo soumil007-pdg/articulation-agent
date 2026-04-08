@@ -11,10 +11,42 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
+
+    <!-- ── Auth Overlay (shown until user enters name + email) ── -->
+    <div class="auth-overlay" id="authOverlay">
+        <div class="auth-card">
+            <div class="auth-logo">
+                <i class="fa-solid fa-comments"></i>
+            </div>
+            <h1>Articulate AI</h1>
+            <p class="auth-subtitle">Your personal communication coach, powered by AI.</p>
+            <form id="authForm" novalidate>
+                <div class="auth-field">
+                    <label for="authName">Your Name</label>
+                    <input type="text" id="authName" placeholder="e.g. Alex Johnson" autocomplete="name" required />
+                </div>
+                <div class="auth-field">
+                    <label for="authEmail">Email Address</label>
+                    <input type="email" id="authEmail" placeholder="e.g. alex@email.com" autocomplete="email" required />
+                </div>
+                <p class="auth-error" id="authError"></p>
+                <button type="submit" class="auth-submit-btn">
+                    <i class="fa-solid fa-arrow-right"></i> Start Coaching
+                </button>
+            </form>
+            <p class="auth-note">Your data stays on your device. No accounts or passwords.</p>
+        </div>
+    </div>
+
+    <!-- ── Main App ── -->
+    <div class="container" id="mainApp" style="display:none;">
         <header class="header">
             <h1>Articulate AI</h1>
             <p>Your Personal Communication Coach</p>
+            <div class="user-badge" id="userBadge">
+                <i class="fa-solid fa-circle-user"></i>
+                <span id="userNameDisplay"></span>
+            </div>
         </header>
 
         <section class="practice-section">
@@ -29,8 +61,23 @@
         </section>
 
         <main class="main-card">
-            <section class="input-section">
-                <div class="textarea-wrapper"><textarea id="userInput" placeholder=" " rows="5"></textarea><label for="userInput">Enter your text here or respond to a practice prompt...</label></div>
+
+            <!-- ── Input Mode Tabs ── -->
+            <div class="mode-tabs">
+                <button class="mode-tab active" id="textModeTab" data-mode="text">
+                    <i class="fa-solid fa-keyboard"></i> Text
+                </button>
+                <button class="mode-tab" id="audioModeTab" data-mode="audio">
+                    <i class="fa-solid fa-microphone"></i> Audio
+                </button>
+            </div>
+
+            <!-- ── Text Input Section ── -->
+            <section class="input-section" id="textInputSection">
+                <div class="textarea-wrapper">
+                    <textarea id="userInput" placeholder=" " rows="5"></textarea>
+                    <label for="userInput">Enter your text here or respond to a practice prompt...</label>
+                </div>
                 <div class="context-group">
                     <label><i class="fa-solid fa-wand-magic-sparkles"></i> Choose Your Goal</label>
                     <div class="context-selector">
@@ -45,10 +92,66 @@
                     <span class="btn-loader"><i class="fa-solid fa-spinner fa-spin"></i> Processing...</span>
                 </button>
             </section>
-            
+
+            <!-- ── Audio Recording Section ── -->
+            <section class="input-section audio-section" id="audioInputSection" style="display:none;">
+
+                <div class="recorder-box">
+                    <div class="recorder-status" id="recorderStatus">
+                        <div class="recorder-icon idle" id="recorderIcon">
+                            <i class="fa-solid fa-microphone"></i>
+                        </div>
+                        <p class="recorder-label" id="recorderLabel">Ready to record</p>
+                        <div class="recorder-timer" id="recorderTimer">0:00 / 5:00</div>
+                    </div>
+
+                    <div class="recorder-controls">
+                        <button class="rec-btn record-btn" id="recordBtn" title="Start Recording">
+                            <i class="fa-solid fa-circle"></i> Record
+                        </button>
+                        <button class="rec-btn stop-btn" id="stopBtn" title="Stop Recording" disabled>
+                            <i class="fa-solid fa-square"></i> Stop
+                        </button>
+                        <button class="rec-btn play-btn" id="playBtn" title="Play Back Recording" disabled>
+                            <i class="fa-solid fa-play"></i> Play
+                        </button>
+                        <button class="rec-btn clear-btn" id="clearRecordingBtn" title="Clear Recording" disabled>
+                            <i class="fa-solid fa-trash"></i> Clear
+                        </button>
+                    </div>
+
+                    <audio id="audioPlayback" style="display:none;" controls></audio>
+                </div>
+
+                <!-- Transcript preview (shown after recording is uploaded) -->
+                <div class="transcript-preview" id="transcriptPreview" style="display:none;">
+                    <h4><i class="fa-solid fa-file-lines"></i> Transcript Preview</h4>
+                    <p id="transcriptText"></p>
+                    <div class="audio-quick-stats" id="audioQuickStats"></div>
+                </div>
+
+                <div class="context-group">
+                    <label><i class="fa-solid fa-wand-magic-sparkles"></i> Choose Your Goal</label>
+                    <div class="context-selector" id="audioContextSelector">
+                        <button class="context-btn active" data-context="prep">💼 Professional Update</button>
+                        <button class="context-btn" data-context="star">⭐ Interview Answer</button>
+                        <button class="context-btn" data-context="logos">🧠 Persuasive Pitch</button>
+                        <button class="context-btn" data-context="5ws">😎 Casual Conversation</button>
+                    </div>
+                </div>
+
+                <button class="process-btn" id="processAudioBtn" disabled>
+                    <span class="btn-text"><i class="fa-solid fa-wand-magic-sparkles"></i> Get Coaching</span>
+                    <span class="btn-loader"><i class="fa-solid fa-spinner fa-spin"></i> Analysing...</span>
+                </button>
+            </section>
+
             <div class="loading-skeleton" id="loadingSkeleton" style="display: none;"></div>
 
+            <!-- ── Results Section ── -->
             <section class="results-section" id="results" style="display: none;">
+
+                <!-- Stage 0: Scores -->
                 <div class="stage-card" id="stage0">
                     <h3><i class="fa-solid fa-chart-line"></i> Your Communication Score</h3>
                     <div class="score-dashboard">
@@ -58,12 +161,23 @@
                         </div>
                         <div class="detailed-scores" id="detailedScores"></div>
                     </div>
+                    <!-- Delivery scores (audio mode only) -->
+                    <div class="delivery-scores-container" id="deliveryScoresContainer" style="display:none;">
+                        <h4><i class="fa-solid fa-microphone-lines"></i> Delivery Scores</h4>
+                        <div class="detailed-scores" id="deliveryScores"></div>
+                    </div>
                     <div class="explanation" id="keyAdviceContainer">
                         <h5><i class="fa-solid fa-key"></i> Your Key Action Item</h5>
                         <p id="keyAdvice"></p>
                     </div>
+                    <!-- Delivery feedback (audio mode only) -->
+                    <div class="explanation delivery-feedback" id="deliveryFeedbackContainer" style="display:none;">
+                        <h5><i class="fa-solid fa-microphone"></i> Delivery Feedback</h5>
+                        <p id="deliveryFeedback"></p>
+                    </div>
                 </div>
 
+                <!-- Stage 1: Vocabulary -->
                 <div class="stage-card" id="stage1">
                     <h3><i class="fa-solid fa-pen-fancy"></i> Stage 1: Vocabulary Enhancement</h3>
                     <div id="stage1-comparison"></div>
@@ -72,6 +186,7 @@
                     <div class="flashcards" id="flashcards"></div>
                 </div>
 
+                <!-- Stage 2: Structure -->
                 <div class="stage-card" id="stage2">
                     <h3><i class="fa-solid fa-sitemap"></i> Stage 2: Structural Flow Coaching</h3>
                     <div class="comparison">
@@ -82,18 +197,19 @@
                         <h5 id="methodName"></h5>
                         <p id="methodDescription"></p>
                     </div>
-                     <div id="methodBreakdown"></div>
+                    <div id="methodBreakdown"></div>
                 </div>
 
+                <!-- Stage 3: Practice -->
                 <div class="stage-card" id="stage3">
                     <h3><i class="fa-solid fa-dumbbell"></i> Stage 3: Practice Your New Skill</h3>
-                    <div id="practice-exercise">
-                    </div>
+                    <div id="practice-exercise"></div>
                 </div>
+
             </section>
         </main>
-        
-        <footer class="footer"><p>Powered by Gemini</p></footer>
+
+        <footer class="footer"><p>Powered by Gemini &amp; Whisper</p></footer>
     </div>
 
     <script src="script.js"></script>
