@@ -546,14 +546,55 @@ class ArticulateCoach {
 
     displayStage1(originalText, data) {
         const comparisonContainer = document.getElementById('stage1-comparison');
-        comparisonContainer.innerHTML = `<div class="comparison"><div class="before"><h4>Previous Version</h4><p>${originalText}</p></div><div class="after"><h4>Enhanced Version</h4><p>${data.enhancedText}</p></div></div>`;
+        // Clear existing content
+        comparisonContainer.innerHTML = '';
+
+        // Build comparison block safely using textContent for user-controlled text
+        const comparison = document.createElement('div');
+        comparison.className = 'comparison';
+
+        const beforeDiv = document.createElement('div');
+        beforeDiv.className = 'before';
+        const beforeHeading = document.createElement('h4');
+        beforeHeading.textContent = 'Previous Version';
+        const beforeParagraph = document.createElement('p');
+        beforeParagraph.textContent = originalText;
+        beforeDiv.appendChild(beforeHeading);
+        beforeDiv.appendChild(beforeParagraph);
+
+        const afterDiv = document.createElement('div');
+        afterDiv.className = 'after';
+        const afterHeading = document.createElement('h4');
+        afterHeading.textContent = 'Enhanced Version';
+        const afterParagraph = document.createElement('p');
+        afterParagraph.textContent = data.enhancedText;
+        afterDiv.appendChild(afterHeading);
+        afterDiv.appendChild(afterParagraph);
+
+        comparison.appendChild(beforeDiv);
+        comparison.appendChild(afterDiv);
+        comparisonContainer.appendChild(comparison);
+
         document.getElementById('stage1Explanation').textContent = data.explanation;
         const flashcardsContainer = document.getElementById('flashcards');
         flashcardsContainer.innerHTML = '';
         data.flashcards.forEach(card => {
             const flashcard = document.createElement('div');
             flashcard.className = 'flashcard';
-            flashcard.innerHTML = `<p>${card.original} ➞ <strong>${card.new}</strong></p><small>${card.definition}</small>`;
+
+            const p = document.createElement('p');
+            const originalTextNode = document.createTextNode(card.original + ' \u279E '); // ➞
+            const strong = document.createElement('strong');
+            strong.textContent = card.new;
+            p.appendChild(originalTextNode);
+            p.appendChild(strong);
+
+            const small = document.createElement('small');
+            small.textContent = card.definition;
+
+            flashcard.appendChild(p);
+            flashcard.appendChild(small);
+
             flashcardsContainer.appendChild(flashcard);
         });
     }
