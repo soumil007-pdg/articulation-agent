@@ -632,6 +632,17 @@ mark.filler-highlight {
     text-decoration: none;
 }
 
+/* Stage skipped banner — shown when a coaching stage fails after all retries */
+.stage-skipped {
+    background: #fff8e1;
+    border-left: 4px solid #f59e0b;
+    padding: 12px 16px;
+    border-radius: 6px;
+    color: #92400e;
+    font-size: 0.9rem;
+    margin: 8px 0;
+}
+
 /* ── Delivery Scores (inside results) ────────────────────────────────────── */
 .delivery-scores-container {
     margin-top: 1.5rem;
