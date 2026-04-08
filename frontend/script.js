@@ -396,39 +396,77 @@ class ArticulateCoach {
         this.loadingSkeleton.style.display = 'block';
         this.resultsContainer.style.display = 'none';
 
+        // Stage 1: scoring (content + delivery) — both diagnostic, run in parallel
+        // Hard stop if either fails — nothing meaningful to show without scores
         try {
-            // Scores are diagnostic (independent) → run in parallel
-            const [scoreResult, deliveryResult] = await Promise.all([
+            const [scoreResult, deliveryResult] = await this.withRetry(() => Promise.all([
                 this.scoreText(transcript),
                 this.scoreDelivery(this.audioMetrics),
-            ]);
+            ]));
             this.displayScore(scoreResult);
             this.displayDeliveryScore(deliveryResult);
-
-            // Improvement stages are a pipeline → each feeds into the next
-            // Stage 2: vocab enhancement on original transcript → enhanced_v1
-            const vocabResult  = await this.enhanceVocabulary(transcript);
-            this.displayStage1(transcript, vocabResult);
-
-            // Stage 3: structure on vocab-improved text → enhanced_v2
-            const structResult = await this.enhanceStructure(vocabResult.enhancedText, this.currentContext);
-            this.displayStage2(vocabResult.enhancedText, structResult);
-
-            // Stage 4: exercises context-aware of both improvements
-            const exercises    = await this.generateExercises(this.currentTopic, this.currentContext, vocabResult, structResult);
-            this.displayStage3(exercises);
-
+        } catch (err) {
+            console.error('Scoring failed after all retries:', err);
             this.loadingSkeleton.style.display = 'none';
             this.resultsContainer.style.display = 'block';
-
-        } catch (error) {
-            console.error('Audio coaching error:', error);
-            this.loadingSkeleton.style.display = 'none';
-            this.showError(`Error: ${error.message}. Please check your backend server and API key.`);
-        } finally {
+            this.showError(`Scoring failed: ${err.message}. Please check your connection and try again.`);
             this.processAudioBtn.disabled = false;
             this.processAudioBtn.classList.remove('loading');
+            return;
         }
+
+        // Stage 2: vocab — retry × 3, fallback = transcript passthrough
+        let vocabResult;
+        try {
+            vocabResult = await this.withRetry(() => this.enhanceVocabulary(transcript));
+            this.displayStage1(transcript, vocabResult);
+        } catch (err) {
+            console.warn('Vocab stage failed after all retries, skipping…', err.message);
+            vocabResult = { enhancedText: transcript, flashcards: [], explanation: '' };
+            this.displayStageSkipped('stage1Section', 'Vocabulary enhancement unavailable right now — skipped.');
+        }
+
+        // Stage 3: structure — uses vocab output (or original transcript if vocab skipped)
+        let structResult;
+        try {
+            structResult = await this.withRetry(() =>
+                this.enhanceStructure(vocabResult.enhancedText, this.currentContext)
+            );
+            this.displayStage2(vocabResult.enhancedText, structResult);
+        } catch (err) {
+            console.warn('Structure stage failed after all retries, skipping…', err.message);
+            structResult = {
+                structurallyEnhancedText: vocabResult.enhancedText,
+                method: { name: 'Framework', description: '' },
+                breakdown: [],
+            };
+            this.displayStageSkipped('stage2Section', 'Structural coaching unavailable right now — skipped.');
+        }
+
+        // Stage 4: exercises — uses both; generic fallback if all retries fail
+        try {
+            const exercises = await this.withRetry(() =>
+                this.generateExercises(this.currentTopic, this.currentContext, vocabResult, structResult)
+            );
+            this.displayStage3(exercises);
+        } catch (err) {
+            console.warn('Exercises stage failed after all retries, using generic fallback…', err.message);
+            this.displayStage3({
+                title: 'Practice Exercise',
+                newTopic: 'Think of a recent experience at work or school.',
+                instructions: 'Structure your response clearly and use precise language.',
+                guidance: [
+                    { step: 'Opening', question: 'What is the main point you want to make?' },
+                    { step: 'Body',    question: 'What evidence or example supports it?' },
+                    { step: 'Close',   question: 'What is your call to action or conclusion?' },
+                ],
+            });
+        }
+
+        this.loadingSkeleton.style.display = 'none';
+        this.resultsContainer.style.display = 'block';
+        this.processAudioBtn.disabled = false;
+        this.processAudioBtn.classList.remove('loading');
     }
 
     // ── Delivery Scoring (audio-specific Gemini call) ────────────────────────
@@ -516,34 +554,72 @@ class ArticulateCoach {
         document.getElementById('deliveryScoresContainer').style.display = 'none';
         document.getElementById('deliveryFeedbackContainer').style.display = 'none';
 
+        // Stage 1: scoring — hard stop if fails (nothing meaningful to show without it)
         try {
-            // Stage 1: diagnostic scoring on original text
-            const scoreResult  = await this.scoreText(input);
+            const scoreResult = await this.withRetry(() => this.scoreText(input));
             this.displayScore(scoreResult);
-
-            // Stage 2: vocabulary enhancement on original text → produces enhanced_v1
-            const vocabResult  = await this.enhanceVocabulary(input);
-            this.displayStage1(input, vocabResult);
-
-            // Stage 3: structure enhancement on vocab-improved text (enhanced_v1) → enhanced_v2
-            const structResult = await this.enhanceStructure(vocabResult.enhancedText, this.currentContext);
-            this.displayStage2(vocabResult.enhancedText, structResult);
-
-            // Stage 4: exercises aware of both vocab upgrades and structural framework applied
-            const exercises    = await this.generateExercises(this.currentTopic, this.currentContext, vocabResult, structResult);
-            this.displayStage3(exercises);
-
+        } catch (err) {
+            console.error('Scoring failed after all retries:', err);
             this.loadingSkeleton.style.display = 'none';
             this.resultsContainer.style.display = 'block';
-
-        } catch (error) {
-            console.error('Processing error:', error);
-            this.loadingSkeleton.style.display = 'none';
-            this.showError(`A critical error occurred: ${error.message}. Please check your backend server and API key.`);
-        } finally {
+            this.showError(`Scoring failed: ${err.message}. Please check your connection and try again.`);
             this.processBtn.disabled = false;
             this.processBtn.classList.remove('loading');
+            return;
         }
+
+        // Stage 2: vocab — retry × 3, fallback = original text passthrough
+        let vocabResult;
+        try {
+            vocabResult = await this.withRetry(() => this.enhanceVocabulary(input));
+            this.displayStage1(input, vocabResult);
+        } catch (err) {
+            console.warn('Vocab stage failed after all retries, skipping…', err.message);
+            vocabResult = { enhancedText: input, flashcards: [], explanation: '' };
+            this.displayStageSkipped('stage1Section', 'Vocabulary enhancement unavailable right now — skipped.');
+        }
+
+        // Stage 3: structure — uses vocab output (or original if vocab was skipped)
+        let structResult;
+        try {
+            structResult = await this.withRetry(() =>
+                this.enhanceStructure(vocabResult.enhancedText, this.currentContext)
+            );
+            this.displayStage2(vocabResult.enhancedText, structResult);
+        } catch (err) {
+            console.warn('Structure stage failed after all retries, skipping…', err.message);
+            structResult = {
+                structurallyEnhancedText: vocabResult.enhancedText,
+                method: { name: 'Framework', description: '' },
+                breakdown: [],
+            };
+            this.displayStageSkipped('stage2Section', 'Structural coaching unavailable right now — skipped.');
+        }
+
+        // Stage 4: exercises — uses both; if fails show a generic fallback exercise
+        try {
+            const exercises = await this.withRetry(() =>
+                this.generateExercises(this.currentTopic, this.currentContext, vocabResult, structResult)
+            );
+            this.displayStage3(exercises);
+        } catch (err) {
+            console.warn('Exercises stage failed after all retries, using generic fallback…', err.message);
+            this.displayStage3({
+                title: 'Practice Exercise',
+                newTopic: 'Think of a recent experience at work or school.',
+                instructions: 'Structure your response clearly and use precise language.',
+                guidance: [
+                    { step: 'Opening', question: 'What is the main point you want to make?' },
+                    { step: 'Body',    question: 'What evidence or example supports it?' },
+                    { step: 'Close',   question: 'What is your call to action or conclusion?' },
+                ],
+            });
+        }
+
+        this.loadingSkeleton.style.display = 'none';
+        this.resultsContainer.style.display = 'block';
+        this.processBtn.disabled = false;
+        this.processBtn.classList.remove('loading');
     }
 
     // ── Gemini Coaching Stages ───────────────────────────────────────────────
@@ -728,6 +804,33 @@ class ArticulateCoach {
                 ${data.guidance.map(item => `<li><strong>${item.step}:</strong> ${item.question}</li>`).join('')}
             </ul>
         `;
+    }
+
+    // ── Retry & Fallback Helpers ─────────────────────────────────────────────
+
+    // Retries an async fn up to maxAttempts with exponential backoff.
+    // Throws on the last failure so callers can handle it.
+    async withRetry(fn, maxAttempts = 3, baseDelay = 1000) {
+        let delay = baseDelay;
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                return await fn();
+            } catch (err) {
+                if (attempt === maxAttempts) throw err;
+                console.warn(`Attempt ${attempt} failed, retrying in ${delay}ms…`, err.message);
+                await new Promise(r => setTimeout(r, delay));
+                delay *= 2; // 1s → 2s → 4s
+            }
+        }
+    }
+
+    // Shows a yellow "skipped" banner inside a section when a stage is bypassed.
+    displayStageSkipped(sectionId, message) {
+        const section = document.getElementById(sectionId);
+        if (section) {
+            section.innerHTML = `<div class="stage-skipped">⚠️ ${message}</div>`;
+            section.style.display = 'block';
+        }
     }
 
     // ── API Helper ───────────────────────────────────────────────────────────
