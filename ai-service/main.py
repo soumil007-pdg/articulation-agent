@@ -1,6 +1,7 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 import whisper
 import torch
+import numpy as np
 import soundfile as sf
 from speechbrain.inference import EncoderClassifier
 import tempfile
@@ -12,21 +13,48 @@ app = FastAPI(title="Articulation AI Service")
 
 device = "cpu"
 
-# Load Whisper model once at startup
-print("Loading Whisper model (base)...")
-whisper_model = whisper.load_model("base", device=device)
+# Load Whisper model once at startup.
+# "small" is markedly more accurate than "base" and still CPU-viable.
+# Override with WHISPER_MODEL=base for faster/lighter, or medium for best.
+WHISPER_MODEL = os.environ.get("WHISPER_MODEL", "small")
+print(f"Loading Whisper model ({WHISPER_MODEL})... (first run downloads the model)")
+whisper_model = whisper.load_model(WHISPER_MODEL, device=device)
 print("Whisper model loaded.")
 
-# Emotion classifier (optional — gracefully disabled if unavailable)
+# SpeechBrain emotion classifier (audio-based, 4 classes — optional)
 emotion_model = None
 try:
     emotion_model = EncoderClassifier.from_hparams(
         source="speechbrain/emotion-recognition-wav2vec2-IEMOCAP",
         savedir="pretrained_models/emotion"
     )
-    print("Emotion model loaded.")
+    print("SpeechBrain emotion model loaded.")
 except Exception as e:
-    print(f"Warning: Emotion model not loaded ({e}). Emotion detection disabled.")
+    print(f"Warning: SpeechBrain emotion model not loaded ({e}). Audio emotion detection disabled.")
+
+# GoEmotion text classifier (28 emotions from word choices — optional)
+goemotions_model = None
+try:
+    from transformers import pipeline as hf_pipeline
+    print("Loading GoEmotion model (monologg/bert-base-cased-goemotions-original)...")
+    print("  Note: First run downloads ~400MB — cached after that.")
+    goemotions_model = hf_pipeline(
+        "text-classification",
+        model="monologg/bert-base-cased-goemotions-original",
+        top_k=3,
+    )
+    print("GoEmotion model loaded.")
+except Exception as e:
+    print(f"Warning: GoEmotion model not loaded ({e}). Text emotion detection disabled.")
+
+# librosa for prosody analysis (pitch, energy, per-sentence WPM)
+_librosa_available = False
+try:
+    import librosa as _librosa
+    _librosa_available = True
+    print("librosa loaded for prosody analysis.")
+except ImportError:
+    print("Warning: librosa not installed. Prosody analysis disabled. Run: pip install librosa")
 
 FILLER_WORDS = {
     "um", "uh", "like", "er", "ah", "hmm", "right", "so",
@@ -42,10 +70,110 @@ class TranscriptionResponse(BaseModel):
     filler_words: List[Dict]
     speech_metrics: Dict
     emotion: Optional[str] = None
+    text_emotion: Optional[Dict] = None
+    prosody: Optional[Dict] = None
+
+
+def analyze_prosody(tmp_path: str, word_segments: list, pauses: list, duration_seconds: float) -> Optional[Dict]:
+    if not _librosa_available:
+        return None
+    try:
+        import librosa
+        y, sr = librosa.load(tmp_path, sr=16000)
+
+        # ── Pitch (YIN algorithm) ─────────────────────────────────────────────
+        hop = 256
+        f0 = librosa.yin(y, fmin=80, fmax=400, sr=sr, hop_length=hop)
+        voiced = f0[f0 > 50]  # filter out unvoiced frames
+        pitch_mean = float(np.mean(voiced)) if len(voiced) > 0 else 0.0
+        pitch_std = float(np.std(voiced)) if len(voiced) > 0 else 0.0
+        pitch_range = float(np.max(voiced) - np.min(voiced)) if len(voiced) > 0 else 0.0
+
+        # ── Energy (RMS per 0.5s window) ─────────────────────────────────────
+        rms = librosa.feature.rms(y=y, hop_length=512)[0]
+        max_rms = np.max(rms) if np.max(rms) > 0 else 1.0
+        rms_norm = rms / max_rms
+
+        window_frames = max(1, sr // 512 // 2)  # ~0.5s in RMS frames
+        energy_values = []
+        for i in range(0, len(rms_norm), window_frames):
+            chunk = rms_norm[i:i + window_frames]
+            energy_values.append(round(float(np.mean(chunk)), 3))
+        energy_values = energy_values[:120]  # cap at 60s
+
+        # Energy profile: compare first 60% vs last 20%
+        n = len(energy_values)
+        if n >= 5:
+            first = energy_values[:int(n * 0.6)]
+            mid = energy_values[int(n * 0.4):int(n * 0.6)]
+            last = energy_values[int(n * 0.8):]
+            avg_first = float(np.mean(first))
+            avg_last = float(np.mean(last)) if last else avg_first
+            avg_mid = float(np.mean(mid)) if mid else avg_first
+
+            if avg_last < avg_first * 0.75:
+                energy_profile = "drops_at_end"
+            elif avg_mid > avg_first * 1.3:
+                energy_profile = "spikes_mid"
+            elif float(np.std(energy_values)) < 0.08:
+                energy_profile = "flat"
+            else:
+                energy_profile = "consistent"
+        else:
+            energy_profile = "flat"
+
+        # ── Per-sentence WPM ──────────────────────────────────────────────────
+        sentence_wpm = []
+        if word_segments:
+            sentences = []
+            cur = []
+            for w in word_segments:
+                cur.append(w)
+                if any(ch in w["word"] for ch in ".!?"):
+                    sentences.append(cur)
+                    cur = []
+            if cur:
+                sentences.append(cur)
+
+            for sent in sentences:
+                if len(sent) >= 3:
+                    dur = sent[-1]["end"] - sent[0]["start"]
+                    wpm = round((len(sent) / dur) * 60) if dur > 0 else 0
+                    text = " ".join(w["word"] for w in sent)[:70]
+                    sentence_wpm.append({"sentence": text, "wpm": wpm})
+
+        # ── Enrich pauses with the word that follows ──────────────────────────
+        pauses_enriched = []
+        for pause in pauses:
+            enriched = dict(pause)
+            # Find the word immediately after the pause
+            after_time = pause["start"] + pause["duration"]
+            for w in word_segments:
+                if w["start"] >= after_time - 0.1:
+                    enriched["before_word"] = w["word"]
+                    break
+            pauses_enriched.append(enriched)
+
+        # ── Silence ratio ─────────────────────────────────────────────────────
+        silence_ratio = round(float(np.mean(rms_norm < 0.05)), 3)
+
+        return {
+            "pitch_mean_hz": round(pitch_mean, 1),
+            "pitch_std_hz": round(pitch_std, 1),
+            "pitch_range_hz": round(pitch_range, 1),
+            "energy_profile": energy_profile,
+            "energy_values": energy_values,
+            "sentence_wpm": sentence_wpm,
+            "pauses_enriched": pauses_enriched,
+            "silence_ratio": silence_ratio,
+        }
+    except Exception as e:
+        print(f"Warning: Prosody analysis failed ({e})")
+        return None
 
 
 @app.post("/transcribe-audio")
-async def transcribe_audio(file: UploadFile = File(...)):
+async def transcribe_audio(file: UploadFile = File(...), context: str = Form(None)):
     allowed_extensions = ('.wav', '.mp3', '.m4a', '.webm', '.ogg', '.flac', '.mp4')
     filename = (file.filename or "audio.webm").lower()
     suffix = os.path.splitext(filename)[1] or ".webm"
@@ -55,13 +183,17 @@ async def transcribe_audio(file: UploadFile = File(...)):
 
     tmp_path = None
     try:
-        # Save uploaded audio to a temp file
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
             tmp.write(await file.read())
             tmp_path = tmp.name
 
-        # Transcribe with Whisper (verbatim, word-level timestamps)
-        result = whisper_model.transcribe(tmp_path, word_timestamps=True)
+        # Transcribe with Whisper (verbatim, word-level timestamps).
+        # initial_prompt primes the decoder with the topic the speaker is
+        # addressing, markedly improving recognition of on-topic vocabulary.
+        transcribe_kwargs = {"word_timestamps": True}
+        if context:
+            transcribe_kwargs["initial_prompt"] = context[:300]
+        result = whisper_model.transcribe(tmp_path, **transcribe_kwargs)
 
         # Flatten word segments from all segments
         word_segments = []
@@ -111,7 +243,7 @@ async def transcribe_audio(file: UploadFile = File(...)):
             "long_pauses": len([p for p in pauses if p["duration"] > 1.5]),
         }
 
-        # Emotion detection (optional)
+        # ── SpeechBrain audio emotion (4-class: neutral/happy/sad/angry) ──────
         emotion = None
         if emotion_model is not None:
             try:
@@ -122,13 +254,33 @@ async def transcribe_audio(file: UploadFile = File(...)):
             except Exception:
                 pass
 
+        # ── GoEmotion text emotion (28-class from word choices) ───────────────
+        text_emotion = None
+        transcript_text = result["text"].strip()
+        if goemotions_model is not None and transcript_text:
+            try:
+                raw = goemotions_model(transcript_text[:512])
+                # pipeline with top_k returns list of dicts for single input
+                top3 = raw[0] if isinstance(raw[0], list) else raw
+                text_emotion = {
+                    "primary": top3[0]["label"],
+                    "top3": [{"label": e["label"], "score": round(float(e["score"]), 3)} for e in top3[:3]],
+                }
+            except Exception as e:
+                print(f"Warning: GoEmotion inference failed ({e})")
+
+        # ── Prosody analysis (pitch, energy, per-sentence WPM) ────────────────
+        prosody = analyze_prosody(tmp_path, word_segments, pauses, duration_seconds)
+
         return TranscriptionResponse(
-            transcript=result["text"].strip(),
+            transcript=transcript_text,
             words=word_segments,
             pauses=pauses,
             filler_words=filler_word_list,
             speech_metrics=speech_metrics,
             emotion=emotion,
+            text_emotion=text_emotion,
+            prosody=prosody,
         )
 
     except Exception as e:
@@ -141,6 +293,18 @@ async def transcribe_audio(file: UploadFile = File(...)):
 @app.get("/")
 async def root():
     return {"status": "Articulation AI Service is running"}
+
+
+@app.get("/health")
+async def health():
+    return {
+        "whisper": "ready" if whisper_model is not None else "down",
+        "whisper_model": WHISPER_MODEL,
+        "emotion": "ready" if emotion_model is not None else "disabled",
+        "goemotions": "ready" if goemotions_model is not None else "disabled",
+        "prosody": "ready" if _librosa_available else "disabled",
+        "device": device,
+    }
 
 
 if __name__ == "__main__":

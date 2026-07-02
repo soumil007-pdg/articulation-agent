@@ -1,47 +1,91 @@
 # Articulate AI Coach
 
-Articulate AI is a web-based personal communication coach that helps users improve their writing and speaking skills. It uses the Google Gemini API to provide real-time feedback, vocabulary enhancements, and structural coaching based on proven communication frameworks like PREP and STAR.
+Articulate AI is a web-based personal communication coach that helps users improve their writing and speaking. It scores your content + delivery, suggests vocabulary upgrades, restructures your message using proven frameworks (PREP, STAR, Persuasive Trio, 5 Ws), and generates guided practice exercises.
 
-## Features
+**Powered by:** [Groq](https://console.groq.com) (Llama 3 family) for coaching · OpenAI Whisper for transcription · localStorage for privacy.
 
-* **Dynamic Coaching:** Select a goal (e.g., "Interview Answer" or "Persuasive Pitch") and get tailored feedback.
-* **Multi-Stage Analysis:** Get a detailed communication score, vocabulary enhancements, and structural improvements.
-* **Guided Practice:** Learn powerful communication frameworks and practice them with guided exercises.
+## ⚡ Quick Start (3 steps)
 
-## Setup and Installation
+1. **Get a free Groq API key** — 30-second signup, no credit card:
+   👉 https://console.groq.com/keys
 
-Follow these steps to run the project locally.
+2. **Set up environment**
+   ```sh
+   git clone <repo-url>
+   cd articulation-project
+   npm install
+   cp api.env.example api.env
+   # Edit api.env and paste your Groq key
+   ```
 
-### Prerequisites
+3. **Start both services**
+   ```sh
+   # Terminal 1 — Express backend (text coaching + serves frontend)
+   node server.js
 
-* [Node.js](https://nodejs.org/en/) installed on your machine.
-* A valid Google Gemini API key. You can get one from [Google AI Studio](https://ai.google.dev/).
+   # Terminal 2 — Python AI service (audio transcription)
+   cd ai-service
+   python3 -m venv venv && source venv/bin/activate
+   pip install -r requirements.txt
+   python main.py
+   ```
 
-### Installation
+   Open http://localhost:8000 and start coaching!
 
-1.  **Clone the repository:**
-    ```sh
-    git clone [https://github.com/your-username/articulation-project.git](https://github.com/your-username/articulation-project.git)
-    cd articulation-project
-    ```
+## ✨ Features
 
-2.  **Install backend dependencies:**
-    ```sh
-    cd backend
-    npm install
-    ```
+- **Text & Audio modes** — Type, or record up to 5 minutes; Whisper transcribes locally.
+- **4-stage coaching pipeline** — Scoring → Vocabulary → Structure → Practice Exercise.
+- **4 communication frameworks** — PREP (Professional), STAR (Interview), Persuasive Trio (Pitch), 5 Ws (Casual).
+- **Delivery analytics** (audio mode) — Speech rate, filler words, pauses, optional emotion detection.
+- **Click-to-highlight** filler words in your transcript.
+- **Session history** — Auto-saves every analysis to localStorage; revisit, star, delete, or export.
+- **Export** — PDF, JSON, or copy summary to clipboard.
+- **Dark mode** — Auto-detects system preference, or manually toggle.
+- **Keyboard shortcuts** — ⌘+Enter to submit, R/S for record/stop, 1–4 for goals, ? for help.
+- **Mobile responsive** — Works on phones, tablets, desktops.
 
-3.  **Set up your API Key:**
-    * In the `backend` folder, create a copy of the `api.env.example` file and rename the copy to `api.env`.
-    * Open the new `api.env` file and replace `YOUR_GEMINI_API_KEY_HERE` with your actual Google Gemini API key.
+## 🔧 Configuration (api.env)
 
-4.  **Run the backend server:**
-    ```sh
-    node server.js
-    ```
-    The terminal should show `🟢 Backend server is running perfectly...`.
+| Variable | Default | Description |
+|---|---|---|
+| `GROQ_API_KEY` | _(required)_ | Your Groq API key |
+| `GROQ_MODEL` | `llama-3.3-70b-versatile` | Model to use |
+| `AI_SERVICE_URL` | `http://localhost:8001` | Python service URL |
+| `PORT` | `8000` | Express port |
+| `ALLOWED_ORIGINS` | _(localhost)_ | CORS allowlist for production |
 
-5.  **Run the frontend:**
-    * Navigate to the `frontend` folder and open the `index.html` file in your web browser.
+## 🩺 Troubleshooting
 
-The application should now be fully functional on your local machine!# articulation-agent
+Run a health check: `curl http://localhost:8000/health`
+- `groq: 'no-key'` → Add `GROQ_API_KEY` to `api.env`
+- `python: 'down'` → Start the Python service: `python ai-service/main.py`
+- `python: 'partial'` → Whisper loaded but emotion detection failed (this is fine)
+
+## 🔐 Privacy
+
+Your name, email, transcripts, and history all stay in `localStorage` on your device. The only data sent to the cloud is the coaching prompt → Groq (and audio → your local Whisper, not cloud). No analytics, no tracking.
+
+## 🛠️ Architecture
+
+```
+┌───────────────────────────┐
+│ Browser (frontend/)       │
+│  - index.html / style.css │
+│  - script.js              │
+└───────────┬───────────────┘
+            │ /coach, /upload-audio, /health
+┌───────────▼──────────────┐    ┌──────────────────────┐
+│ Express (server.js :8000) │───▶│ Groq API (cloud)     │
+│  - Static file serving    │    │  llama-3.3-70b       │
+│  - Health checks          │    └──────────────────────┘
+│  - Audio multipart proxy  │
+└───────────┬──────────────┘
+            │ /transcribe-audio
+┌───────────▼─────────────────┐
+│ FastAPI (ai-service :8001)  │
+│  - Whisper (base, CPU)      │
+│  - Speech metrics extraction│
+│  - Optional emotion (wav2vec)│
+└─────────────────────────────┘
+```

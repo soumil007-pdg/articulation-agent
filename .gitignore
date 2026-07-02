@@ -1,0 +1,29 @@
+# Environment secrets — never commit
+api.env
+.env
+.env.local
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Python
+ai-service/venv/
+ai-service/__pycache__/
+__pycache__/
+*.pyc
+*.pyo
+
+# Downloaded model caches (large, regenerable)
+pretrained_models/
+wav2vec2_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo

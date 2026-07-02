@@ -2,22 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0d3b25">
     <title>Articulate AI Coach</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 </head>
 <body>
 
-    <!-- ── Auth Overlay (shown until user enters name + email) ── -->
+    <!-- ── Toast Container ── -->
+    <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+    <!-- ── Auth Overlay ── -->
     <div class="auth-overlay" id="authOverlay">
         <div class="auth-card">
-            <div class="auth-logo">
-                <i class="fa-solid fa-comments"></i>
-            </div>
+            <div class="auth-logo"><i class="fa-solid fa-comments"></i></div>
             <h1>Articulate AI</h1>
             <p class="auth-subtitle">Your personal communication coach, powered by AI.</p>
             <form id="authForm" novalidate>
@@ -26,32 +29,85 @@
                     <input type="text" id="authName" placeholder="e.g. Alex Johnson" autocomplete="name" required />
                 </div>
                 <div class="auth-field">
-                    <label for="authEmail">Email Address</label>
-                    <input type="email" id="authEmail" placeholder="e.g. alex@email.com" autocomplete="email" required />
+                    <label for="authEmail">Email Address <span class="auth-optional">(optional)</span></label>
+                    <input type="email" id="authEmail" placeholder="e.g. alex@email.com" autocomplete="email" />
                 </div>
                 <p class="auth-error" id="authError"></p>
                 <button type="submit" class="auth-submit-btn">
                     <i class="fa-solid fa-arrow-right"></i> Start Coaching
                 </button>
+                <button type="button" class="auth-skip-btn" id="authSkipBtn">
+                    Continue as Guest
+                </button>
             </form>
-            <p class="auth-note">Your data stays on your device. No accounts or passwords.</p>
+            <p class="auth-note"><i class="fa-solid fa-shield-halved"></i> Your name & email stay on your device. No cloud sign-up needed.</p>
         </div>
     </div>
 
     <!-- ── Main App ── -->
     <div class="container" id="mainApp" style="display:none;">
+
         <header class="header">
-            <h1>Articulate AI</h1>
-            <p>Your Personal Communication Coach</p>
+            <div class="header-top">
+                <div class="header-brand">
+                    <h1>Articulate AI</h1>
+                    <p>Your Personal Communication Coach</p>
+                </div>
+                <div class="header-actions">
+                    <button class="icon-btn" id="dashboardBtn" title="Progress dashboard" aria-label="Open progress dashboard">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </button>
+                    <button class="icon-btn" id="historyBtn" title="History (⌘H)" aria-label="Open history">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                        <span class="badge" id="historyBadge" style="display:none;">0</span>
+                    </button>
+                    <button class="icon-btn" id="themeToggleBtn" title="Toggle theme" aria-label="Toggle dark mode">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+                    <button class="icon-btn" id="shortcutsBtn" title="Keyboard shortcuts (?)" aria-label="Show keyboard shortcuts">
+                        <i class="fa-solid fa-keyboard"></i>
+                    </button>
+                    <button class="icon-btn" id="settingsBtn" title="Settings (⌘K)" aria-label="Open settings">
+                        <i class="fa-solid fa-gear"></i>
+                    </button>
+                </div>
+            </div>
             <div class="user-badge" id="userBadge">
                 <i class="fa-solid fa-circle-user"></i>
                 <span id="userNameDisplay"></span>
             </div>
         </header>
 
-        <section class="practice-section">
-            <h2><i class="fa-solid fa-microphone-lines"></i> Articulation Practice</h2>
-            <p>Select a common topic to practice your response. The AI will then analyze your articulation.</p>
+        <!-- ── Daily Training Hub ── -->
+        <section class="daily-hub" id="dailyHub">
+            <div class="daily-hub-top">
+                <h2><i class="fa-solid fa-fire"></i> Daily Training</h2>
+                <div class="streak-chips">
+                    <div class="streak-chip" id="streakChip" title="Consecutive days practiced">
+                        <i class="fa-solid fa-fire"></i> <strong id="streakCount">0</strong> day streak
+                    </div>
+                    <div class="streak-chip" id="weekChip" title="Sessions in the last 7 days">
+                        <i class="fa-solid fa-calendar-week"></i> <strong id="weekCount">0</strong> this week
+                    </div>
+                </div>
+            </div>
+
+            <div class="daily-cards">
+                <div class="daily-card focus-card" id="dailyFocusCard">
+                    <div class="daily-card-label"><i class="fa-solid fa-bullseye"></i> Today's Focus</div>
+                    <h3 id="focusName"></h3>
+                    <p class="focus-why" id="focusWhy"></p>
+                    <p class="focus-drill" id="focusDrill"></p>
+                </div>
+                <div class="daily-card challenge-card" id="dailyChallengeCard">
+                    <div class="daily-card-label"><i class="fa-solid fa-trophy"></i> Today's Challenge</div>
+                    <p class="challenge-text" id="challengeText"></p>
+                    <button class="challenge-btn" id="useChallengeBtn">
+                        <i class="fa-solid fa-play"></i> Practice this now
+                    </button>
+                </div>
+            </div>
+
             <div class="practice-topics">
                 <button class="practice-btn" data-topic="introduction"><i class="fa-solid fa-user"></i> Tell me about yourself</button>
                 <button class="practice-btn" data-topic="hobby"><i class="fa-solid fa-book"></i> Talk about a hobby</button>
@@ -78,24 +134,10 @@
                     <textarea id="userInput" placeholder=" " rows="5"></textarea>
                     <label for="userInput">Enter your text here or respond to a practice prompt...</label>
                 </div>
-                <div class="context-group">
-                    <label><i class="fa-solid fa-wand-magic-sparkles"></i> Choose Your Goal</label>
-                    <div class="context-selector">
-                        <button class="context-btn active" data-context="prep">💼 Professional Update</button>
-                        <button class="context-btn" data-context="star">⭐ Interview Answer</button>
-                        <button class="context-btn" data-context="logos">🧠 Persuasive Pitch</button>
-                        <button class="context-btn" data-context="5ws">😎 Casual Conversation</button>
-                    </div>
-                </div>
-                <button class="process-btn" id="processBtn">
-                    <span class="btn-text">Enhance My Writing</span>
-                    <span class="btn-loader"><i class="fa-solid fa-spinner fa-spin"></i> Processing...</span>
-                </button>
             </section>
 
             <!-- ── Audio Recording Section ── -->
             <section class="input-section audio-section" id="audioInputSection" style="display:none;">
-
                 <div class="recorder-box">
                     <div class="recorder-status" id="recorderStatus">
                         <div class="recorder-icon idle" id="recorderIcon">
@@ -106,10 +148,10 @@
                     </div>
 
                     <div class="recorder-controls">
-                        <button class="rec-btn record-btn" id="recordBtn" title="Start Recording">
+                        <button class="rec-btn record-btn" id="recordBtn" title="Start Recording (R)">
                             <i class="fa-solid fa-circle"></i> Record
                         </button>
-                        <button class="rec-btn stop-btn" id="stopBtn" title="Stop Recording" disabled>
+                        <button class="rec-btn stop-btn" id="stopBtn" title="Stop Recording (S)" disabled>
                             <i class="fa-solid fa-square"></i> Stop
                         </button>
                         <button class="rec-btn play-btn" id="playBtn" title="Play Back Recording" disabled>
@@ -123,33 +165,97 @@
                     <audio id="audioPlayback" style="display:none;" controls></audio>
                 </div>
 
-                <!-- Transcript preview (shown after recording is uploaded) -->
                 <div class="transcript-preview" id="transcriptPreview" style="display:none;">
                     <h4><i class="fa-solid fa-file-lines"></i> Transcript Preview</h4>
                     <p id="transcriptText"></p>
                     <div class="audio-quick-stats" id="audioQuickStats"></div>
                 </div>
-
-                <div class="context-group">
-                    <label><i class="fa-solid fa-wand-magic-sparkles"></i> Choose Your Goal</label>
-                    <div class="context-selector" id="audioContextSelector">
-                        <button class="context-btn active" data-context="prep">💼 Professional Update</button>
-                        <button class="context-btn" data-context="star">⭐ Interview Answer</button>
-                        <button class="context-btn" data-context="logos">🧠 Persuasive Pitch</button>
-                        <button class="context-btn" data-context="5ws">😎 Casual Conversation</button>
-                    </div>
-                </div>
-
-                <button class="process-btn" id="processAudioBtn" disabled>
-                    <span class="btn-text"><i class="fa-solid fa-wand-magic-sparkles"></i> Get Coaching</span>
-                    <span class="btn-loader"><i class="fa-solid fa-spinner fa-spin"></i> Analysing...</span>
-                </button>
             </section>
 
-            <div class="loading-skeleton" id="loadingSkeleton" style="display: none;"></div>
+            <!-- ── Shared Context Selector ── -->
+            <div class="context-group">
+                <label><i class="fa-solid fa-wand-magic-sparkles"></i> Choose Your Goal</label>
+                <div class="context-selector" id="contextSelector">
+                    <button class="context-btn active" data-context="prep" title="Press 1">💼 Professional Update</button>
+                    <button class="context-btn" data-context="star" title="Press 2">⭐ Interview Answer</button>
+                    <button class="context-btn" data-context="logos" title="Press 3">🧠 Persuasive Pitch</button>
+                    <button class="context-btn" data-context="5ws" title="Press 4">😎 Casual Conversation</button>
+                </div>
+            </div>
+
+            <!-- ── Audience Selector ── -->
+            <div class="context-group audience-group">
+                <label><i class="fa-solid fa-users"></i> Who's Your Audience?</label>
+                <div class="audience-selector" id="audienceSelector">
+                    <button class="audience-btn active" data-audience="general">🌍 General</button>
+                    <button class="audience-btn" data-audience="executives">👔 Executives</button>
+                    <button class="audience-btn" data-audience="technical">⚙️ Technical Team</button>
+                    <button class="audience-btn" data-audience="interviewer">🎯 Interviewer</button>
+                    <button class="audience-btn" data-audience="public">🎤 Public Audience</button>
+                    <button class="audience-btn" data-audience="friends">☕ Friends</button>
+                </div>
+            </div>
+
+            <button class="process-btn" id="processBtn">
+                <span class="btn-text"><i class="fa-solid fa-wand-magic-sparkles"></i> Enhance My Writing</span>
+                <span class="btn-loader"><i class="fa-solid fa-spinner fa-spin"></i> Processing...</span>
+            </button>
+            <button class="process-btn" id="processAudioBtn" style="display:none;" disabled>
+                <span class="btn-text"><i class="fa-solid fa-wand-magic-sparkles"></i> Get Coaching</span>
+                <span class="btn-loader"><i class="fa-solid fa-spinner fa-spin"></i> Analysing...</span>
+            </button>
+
+            <!-- ── Per-Stage Progress UI ── -->
+            <div class="progress-stages" id="progressStages" style="display:none;">
+                <div class="progress-step" data-step="score">
+                    <div class="progress-step-icon"><i class="fa-solid fa-circle-notch fa-spin"></i></div>
+                    <div class="progress-step-label">Scoring</div>
+                </div>
+                <div class="progress-step" data-step="vocab">
+                    <div class="progress-step-icon"><i class="fa-regular fa-circle"></i></div>
+                    <div class="progress-step-label">Vocabulary</div>
+                </div>
+                <div class="progress-step" data-step="structure">
+                    <div class="progress-step-icon"><i class="fa-regular fa-circle"></i></div>
+                    <div class="progress-step-label">Structure</div>
+                </div>
+                <div class="progress-step" data-step="rhetoric">
+                    <div class="progress-step-icon"><i class="fa-regular fa-circle"></i></div>
+                    <div class="progress-step-label">Rhetoric</div>
+                </div>
+                <div class="progress-step" data-step="exercises">
+                    <div class="progress-step-icon"><i class="fa-regular fa-circle"></i></div>
+                    <div class="progress-step-label">Exercises</div>
+                </div>
+            </div>
+
+            <!-- ── Empty State ── -->
+            <div class="empty-state" id="emptyState">
+                <i class="fa-solid fa-chart-line"></i>
+                <p>Your coaching analysis will appear here</p>
+                <small>Pick a goal, write or record, then hit the button above.</small>
+            </div>
 
             <!-- ── Results Section ── -->
             <section class="results-section" id="results" style="display: none;">
+
+                <!-- Results Actions Bar -->
+                <div class="results-actions" id="resultsActions">
+                    <span class="results-actions-label" id="historyBadgeLabel" style="display:none;">
+                        <i class="fa-solid fa-clock-rotate-left"></i> Viewing past session
+                    </span>
+                    <div class="results-actions-buttons">
+                        <button class="action-btn" id="copySummaryBtn" title="Copy summary">
+                            <i class="fa-solid fa-copy"></i> Copy
+                        </button>
+                        <button class="action-btn" id="exportPdfBtn" title="Download as PDF">
+                            <i class="fa-solid fa-file-pdf"></i> PDF
+                        </button>
+                        <button class="action-btn" id="exportJsonBtn" title="Download as JSON">
+                            <i class="fa-solid fa-file-code"></i> JSON
+                        </button>
+                    </div>
+                </div>
 
                 <!-- Stage 0: Scores -->
                 <div class="stage-card" id="stage0">
@@ -161,24 +267,54 @@
                         </div>
                         <div class="detailed-scores" id="detailedScores"></div>
                     </div>
-                    <!-- Delivery scores (audio mode only) -->
                     <div class="delivery-scores-container" id="deliveryScoresContainer" style="display:none;">
                         <h4><i class="fa-solid fa-microphone-lines"></i> Delivery Scores</h4>
                         <div class="detailed-scores" id="deliveryScores"></div>
+                    </div>
+                    <div class="explanation interpreted-box" id="interpretedContainer" style="display:none;">
+                        <h5><i class="fa-solid fa-ear-listen"></i> What I Heard You Saying</h5>
+                        <p id="interpretedMeaning"></p>
                     </div>
                     <div class="explanation" id="keyAdviceContainer">
                         <h5><i class="fa-solid fa-key"></i> Your Key Action Item</h5>
                         <p id="keyAdvice"></p>
                     </div>
-                    <!-- Delivery feedback (audio mode only) -->
                     <div class="explanation delivery-feedback" id="deliveryFeedbackContainer" style="display:none;">
                         <h5><i class="fa-solid fa-microphone"></i> Delivery Feedback</h5>
                         <p id="deliveryFeedback"></p>
                     </div>
                 </div>
 
+                <!-- Verbal Delivery Coaching (audio mode only) -->
+                <div class="stage-card verbal-coaching-card" id="verbalCoachingCard" style="display:none;">
+                    <h3><i class="fa-solid fa-waveform-lines"></i> Verbal Delivery Coaching</h3>
+
+                    <div class="verbal-section" id="verbalEmotionSection" style="display:none;">
+                        <h4><i class="fa-solid fa-face-smile-wink"></i> Emotional Tone of Your Words</h4>
+                        <div class="emotion-chips" id="emotionChips"></div>
+                        <p class="verbal-subtext" id="emotionAlignmentText"></p>
+                    </div>
+
+                    <div class="verbal-section" id="verbalPacingSection" style="display:none;">
+                        <h4><i class="fa-solid fa-gauge-high"></i> Pacing by Sentence</h4>
+                        <div class="wpm-bars" id="wpmBars"></div>
+                        <p class="verbal-legend"><span class="wpm-slow"></span> Under 100 wpm &nbsp; <span class="wpm-ideal"></span> 100–150 wpm &nbsp; <span class="wpm-fast"></span> Over 150 wpm</p>
+                    </div>
+
+                    <div class="verbal-section" id="verbalEnergySection" style="display:none;">
+                        <h4><i class="fa-solid fa-bolt"></i> Vocal Energy Profile</h4>
+                        <div class="energy-profile-badge" id="energyProfileBadge"></div>
+                        <div class="energy-chart" id="energyChart"></div>
+                    </div>
+
+                    <div class="verbal-section" id="verbalAdviceSection" style="display:none;">
+                        <h4><i class="fa-solid fa-comments"></i> Actionable Advice</h4>
+                        <div class="advice-pills" id="advicePills"></div>
+                    </div>
+                </div>
+
                 <!-- Stage 1: Vocabulary -->
-                <div class="stage-card" id="stage1">
+                <div class="stage-card" id="stage1Section">
                     <h3><i class="fa-solid fa-pen-fancy"></i> Stage 1: Vocabulary Enhancement</h3>
                     <div id="stage1-comparison"></div>
                     <div class="explanation"><h5><i class="fa-solid fa-lightbulb"></i> Key Improvements</h5><p id="stage1Explanation"></p></div>
@@ -187,7 +323,7 @@
                 </div>
 
                 <!-- Stage 2: Structure -->
-                <div class="stage-card" id="stage2">
+                <div class="stage-card" id="stage2Section">
                     <h3><i class="fa-solid fa-sitemap"></i> Stage 2: Structural Flow Coaching</h3>
                     <div class="comparison">
                         <div class="before"><h4>Previous Version</h4><p id="stage2Before"></p></div>
@@ -200,16 +336,158 @@
                     <div id="methodBreakdown"></div>
                 </div>
 
-                <!-- Stage 3: Practice -->
-                <div class="stage-card" id="stage3">
-                    <h3><i class="fa-solid fa-dumbbell"></i> Stage 3: Practice Your New Skill</h3>
+                <!-- Stage 3: Rhetorical Power -->
+                <div class="stage-card" id="rhetoricSection">
+                    <h3><i class="fa-solid fa-scroll"></i> Stage 3: Rhetorical Power</h3>
+                    <div class="rhetoric-score-row" id="rhetoricScoreRow"></div>
+                    <div class="device-chips" id="deviceChips"></div>
+                    <div class="explanation" id="rhetoricSummaryBox">
+                        <h5><i class="fa-solid fa-feather-pointed"></i> Rhetorical Read</h5>
+                        <p id="rhetoricSummary"></p>
+                    </div>
+                    <div class="rhetoric-suggestion" id="rhetoricSuggestion"></div>
+                </div>
+
+                <!-- Stage 4: Practice -->
+                <div class="stage-card" id="stage3Section">
+                    <h3><i class="fa-solid fa-dumbbell"></i> Stage 4: Practice Your New Skill</h3>
                     <div id="practice-exercise"></div>
                 </div>
 
             </section>
         </main>
 
-        <footer class="footer"><p>Powered by Gemini &amp; Whisper</p></footer>
+        <footer class="footer">
+            <p>Powered by Groq &amp; Whisper · <a href="https://console.groq.com/keys" target="_blank" rel="noopener">Get free Groq key</a></p>
+        </footer>
+    </div>
+
+    <!-- ── History Drawer ── -->
+    <div class="drawer-backdrop" id="historyBackdrop"></div>
+    <aside class="drawer" id="historyDrawer" aria-hidden="true">
+        <div class="drawer-header">
+            <h3><i class="fa-solid fa-clock-rotate-left"></i> Session History</h3>
+            <button class="icon-btn" id="closeHistoryBtn" aria-label="Close history">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="drawer-body" id="historyList">
+            <div class="drawer-empty" id="historyEmptyState">
+                <i class="fa-solid fa-inbox"></i>
+                <p>No saved sessions yet.</p>
+                <small>Your analyses will be saved here automatically.</small>
+            </div>
+        </div>
+        <div class="drawer-footer">
+            <button class="action-btn danger" id="clearHistoryBtn">
+                <i class="fa-solid fa-trash"></i> Clear All
+            </button>
+            <button class="action-btn" id="exportAllBtn">
+                <i class="fa-solid fa-download"></i> Export All
+            </button>
+        </div>
+    </aside>
+
+    <!-- ── Settings Modal ── -->
+    <div class="modal-backdrop" id="settingsBackdrop"></div>
+    <div class="modal" id="settingsModal" role="dialog" aria-labelledby="settingsTitle" aria-hidden="true">
+        <div class="modal-header">
+            <h3 id="settingsTitle"><i class="fa-solid fa-gear"></i> Settings</h3>
+            <button class="icon-btn" id="closeSettingsBtn" aria-label="Close settings">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="settings-section">
+                <h4><i class="fa-solid fa-user"></i> Profile</h4>
+                <label>Name<input type="text" id="settingsName" /></label>
+                <label>Email<input type="email" id="settingsEmail" /></label>
+                <button class="action-btn danger" id="signOutBtn"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button>
+            </div>
+
+            <div class="settings-section">
+                <h4><i class="fa-solid fa-sliders"></i> Defaults</h4>
+                <label>Default goal
+                    <select id="settingsDefaultContext">
+                        <option value="prep">💼 Professional Update</option>
+                        <option value="star">⭐ Interview Answer</option>
+                        <option value="logos">🧠 Persuasive Pitch</option>
+                        <option value="5ws">😎 Casual Conversation</option>
+                    </select>
+                </label>
+                <label>Default mode
+                    <select id="settingsDefaultMode">
+                        <option value="text">Text</option>
+                        <option value="audio">Audio</option>
+                    </select>
+                </label>
+            </div>
+
+            <div class="settings-section">
+                <h4><i class="fa-solid fa-palette"></i> Appearance</h4>
+                <label>Theme
+                    <select id="settingsTheme">
+                        <option value="auto">Match system</option>
+                        <option value="light">Light</option>
+                        <option value="dark">Dark</option>
+                    </select>
+                </label>
+            </div>
+
+            <div class="settings-section">
+                <h4><i class="fa-solid fa-database"></i> Data</h4>
+                <button class="action-btn danger" id="clearAllDataBtn">
+                    <i class="fa-solid fa-bomb"></i> Reset Everything
+                </button>
+                <small class="hint">Clears your profile, history, and preferences. Cannot be undone.</small>
+            </div>
+
+            <div class="settings-section about">
+                <h4><i class="fa-solid fa-circle-info"></i> About</h4>
+                <p>Articulate AI · v1.0</p>
+                <p><a href="https://console.groq.com/keys" target="_blank" rel="noopener">Get a free Groq API key</a></p>
+                <p>Backend status: <span id="backendStatus">checking…</span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Progress Dashboard Modal ── -->
+    <div class="modal-backdrop" id="dashboardBackdrop"></div>
+    <div class="modal dashboard-modal" id="dashboardModal" role="dialog" aria-labelledby="dashboardTitle" aria-hidden="true">
+        <div class="modal-header">
+            <h3 id="dashboardTitle"><i class="fa-solid fa-chart-line"></i> Your Progress</h3>
+            <button class="icon-btn" id="closeDashboardBtn" aria-label="Close dashboard">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="modal-body" id="dashboardBody">
+            <!-- Populated by ProgressDashboard.render() -->
+        </div>
+    </div>
+
+    <!-- ── Keyboard Shortcuts Overlay ── -->
+    <div class="modal-backdrop" id="shortcutsBackdrop"></div>
+    <div class="modal shortcuts-modal" id="shortcutsModal" role="dialog" aria-hidden="true">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-keyboard"></i> Keyboard Shortcuts</h3>
+            <button class="icon-btn" id="closeShortcutsBtn" aria-label="Close shortcuts">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="shortcuts-grid">
+                <div class="shortcut-row"><span class="kbd-group"><kbd>⌘</kbd><kbd>↵</kbd></span><span>Submit / analyze</span></div>
+                <div class="shortcut-row"><span class="kbd-group"><kbd>⌘</kbd><kbd>K</kbd></span><span>Open settings</span></div>
+                <div class="shortcut-row"><span class="kbd-group"><kbd>⌘</kbd><kbd>H</kbd></span><span>Toggle history</span></div>
+                <div class="shortcut-row"><span class="kbd-group"><kbd>R</kbd></span><span>Start recording (audio mode)</span></div>
+                <div class="shortcut-row"><span class="kbd-group"><kbd>S</kbd></span><span>Stop recording</span></div>
+                <div class="shortcut-row"><span class="kbd-group"><kbd>T</kbd></span><span>Switch to text mode</span></div>
+                <div class="shortcut-row"><span class="kbd-group"><kbd>A</kbd></span><span>Switch to audio mode</span></div>
+                <div class="shortcut-row"><span class="kbd-group"><kbd>1</kbd>–<kbd>4</kbd></span><span>Switch goal</span></div>
+                <div class="shortcut-row"><span class="kbd-group"><kbd>?</kbd></span><span>Show this menu</span></div>
+                <div class="shortcut-row"><span class="kbd-group"><kbd>Esc</kbd></span><span>Close modal / drawer</span></div>
+            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>
