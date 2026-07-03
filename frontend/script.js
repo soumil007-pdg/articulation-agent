@@ -832,40 +832,159 @@ class ArticulateCoach {
         });
     }
 
-    // ── Auth ───────────────────────────────────────────────────────────────
+    // ── Journey onboarding (Fabulous-style narrative) ──────────────────────
+    static ARCHETYPES = {
+        career:     { title: 'The Composed Candidate', context: 'star',  audience: 'interviewer',
+                      note: 'Interview-sharp answers: one vivid story, zero hedging.' },
+        leadership: { title: 'The Clear Leader',       context: 'prep',  audience: 'executives',
+                      note: 'Conclusion first, evidence second — the way rooms actually listen.' },
+        confidence: { title: 'The Steady Voice',       context: '5ws',   audience: 'general',
+                      note: 'Everyday clarity, until speaking well stops feeling like a performance.' },
+        ideas:      { title: 'The Idea Weaver',        context: 'logos', audience: 'general',
+                      note: 'Your ideas deserve words as sharp as they are.' },
+    };
+
+    static STRUGGLE_NOTES = {
+        rambling: 'We’ll start with structure — every session rebuilds your answer on a proven skeleton.',
+        fillers:  'We’ll hunt your fillers — every recording highlights each "um" so you can watch them vanish.',
+        nerves:   'We’ll train your delivery — pitch, pacing, and energy, coached from your own voice.',
+        words:    'We’ll sharpen your vocabulary — every session swaps vague words for precise ones.',
+    };
+
     handleAuth() {
         const stored = this.loadUser();
         if (stored) {
             this.showApp(stored.name);
         } else {
-            $('authOverlay').style.display = 'flex';
-            $('mainApp').style.display = 'none';
+            this.startJourney();
         }
+    }
 
-        $('authForm').addEventListener('submit', (e) => {
+    startJourney() {
+        const overlay = $('journeyOverlay');
+        overlay.style.display = 'flex';
+        $('mainApp').style.display = 'none';
+
+        const journey = { why: null, struggle: null };
+        const scenes = $$('.journey-scene');
+        const dots = $$('#journeyDots .dot');
+
+        const go = (n) => {
+            scenes.forEach((s, i) => s.classList.toggle('active', i === n));
+            dots.forEach((d, i) => d.classList.toggle('active', i <= n));
+            if (n === 3) this.renderArchetype(journey);
+        };
+
+        overlay.querySelector('[data-next]').addEventListener('click', () => go(1));
+
+        $$('#whyChoices .choice-card').forEach(card => card.addEventListener('click', () => {
+            journey.why = card.dataset.why;
+            $$('#whyChoices .choice-card').forEach(c => c.classList.toggle('selected', c === card));
+            setTimeout(() => go(2), 450);
+        }));
+
+        $$('#struggleChoices .choice-card').forEach(card => card.addEventListener('click', () => {
+            journey.struggle = card.dataset.struggle;
+            $$('#struggleChoices .choice-card').forEach(c => c.classList.toggle('selected', c === card));
+            setTimeout(() => go(3), 450);
+        }));
+
+        const complete = (name) => {
+            localStorage.setItem('articulate_user', JSON.stringify({ name, email: '' }));
+            localStorage.setItem('articulate_journey', JSON.stringify(journey));
+            this.applyJourneyDefaults(journey);
+            overlay.classList.add('closing');
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                overlay.classList.remove('closing');
+                this.showApp(name);
+            }, 700);
+        };
+
+        $('journeyForm').addEventListener('submit', (e) => {
             e.preventDefault();
-            const name = $('authName').value.trim();
-            const email = $('authEmail').value.trim();
-            const errorEl = $('authError');
-
-            if (!name) { errorEl.textContent = 'Please enter your name.'; return; }
-            if (email && !this.isValidEmail(email)) { errorEl.textContent = 'Please enter a valid email address.'; return; }
-
-            errorEl.textContent = '';
-            localStorage.setItem('articulate_user', JSON.stringify({ name, email }));
-            this.showApp(name);
+            const name = $('journeyName').value.trim();
+            if (!name) { $('journeyError').textContent = 'Tell us your name — or walk as a guest below.'; return; }
+            $('journeyError').textContent = '';
+            complete(name);
         });
 
-        $('authSkipBtn').addEventListener('click', () => {
-            localStorage.setItem('articulate_user', JSON.stringify({ name: 'Guest', email: '' }));
-            this.showApp('Guest');
-        });
+        $('journeySkipBtn').addEventListener('click', () => complete('Guest'));
+    }
+
+    renderArchetype(journey) {
+        const arch = ArticulateCoach.ARCHETYPES[journey.why] || ArticulateCoach.ARCHETYPES.confidence;
+        $('journeyArchetype').textContent = arch.title;
+        const struggleNote = ArticulateCoach.STRUGGLE_NOTES[journey.struggle] || '';
+        $('journeyPathNote').textContent = `${arch.note} ${struggleNote}`;
+    }
+
+    // The journey answers become real coaching defaults — goal + audience.
+    applyJourneyDefaults(journey) {
+        const arch = ArticulateCoach.ARCHETYPES[journey.why];
+        if (!arch) return;
+        this.currentContext = arch.context;
+        this.currentAudience = arch.audience;
+        $$('.context-btn').forEach(b => b.classList.toggle('active', b.dataset.context === arch.context));
+        $$('.audience-btn').forEach(b => b.classList.toggle('active', b.dataset.audience === arch.audience));
+        const settings = Settings.load();
+        settings.defaultContext = arch.context;
+        Settings.save(settings);
     }
 
     showApp(name) {
-        $('authOverlay').style.display = 'none';
         $('mainApp').style.display = 'block';
         $('userNameDisplay').textContent = name;
+    }
+
+    // ── Celebration (session complete) ─────────────────────────────────────
+    showCelebration(score, streak) {
+        const overlay = $('celebrationOverlay');
+        if (!overlay) return;
+
+        const line = score >= 8.5 ? 'That was genuinely eloquent.'
+            : score >= 7   ? 'Your clarity is growing.'
+            : score >= 5.5 ? 'Progress — the path is working.'
+            :                'Every master was once unclear. Keep walking.';
+        $('celebrationLine').textContent = line;
+
+        const streakEl = $('celebrationStreak');
+        if (streak >= 2) {
+            $('celebrationStreakText').textContent = `${streak}-day streak — don’t break it now`;
+            streakEl.style.display = 'inline-flex';
+        } else {
+            streakEl.style.display = 'none';
+        }
+
+        overlay.classList.add('open');
+        overlay.setAttribute('aria-hidden', 'false');
+
+        this.animateScore($('celebrationScore'), score || 0, 1100);
+        this.spawnCelebrationParticles();
+    }
+
+    spawnCelebrationParticles() {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const host = $('celebrationParticles');
+        host.innerHTML = '';
+        for (let i = 0; i < 26; i++) {
+            const p = document.createElement('span');
+            p.className = 'cel-particle' + (i % 3 === 0 ? ' gold' : '');
+            p.style.left = Math.random() * 100 + '%';
+            p.style.setProperty('--dur', (3.2 + Math.random() * 3) + 's');
+            p.style.setProperty('--delay', (Math.random() * 1.6) + 's');
+            p.style.setProperty('--drift', (Math.random() * 120 - 60) + 'px');
+            p.style.setProperty('--size', (6 + Math.random() * 8) + 'px');
+            host.appendChild(p);
+        }
+    }
+
+    hideCelebration() {
+        const overlay = $('celebrationOverlay');
+        overlay.classList.remove('open');
+        overlay.setAttribute('aria-hidden', 'true');
+        $('celebrationParticles').innerHTML = '';
+        $('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     loadUser() {
@@ -910,6 +1029,12 @@ class ArticulateCoach {
 
     // ── Event Listeners ────────────────────────────────────────────────────
     setupEventListeners() {
+        // Celebration overlay
+        $('celebrationContinueBtn').addEventListener('click', () => this.hideCelebration());
+        $('celebrationOverlay').addEventListener('click', (e) => {
+            if (e.target === $('celebrationOverlay')) this.hideCelebration();
+        });
+
         // Mode tabs
         $('textModeTab').addEventListener('click', () => this.switchMode('text'));
         $('audioModeTab').addEventListener('click', () => this.switchMode('audio'));
@@ -1511,7 +1636,7 @@ class ArticulateCoach {
         $('historyBadgeLabel').style.display = 'none';
         DailyPractice.renderStats();
         const streak = DailyPractice.computeStreak();
-        Toast.success(streak >= 2 ? `Saved — ${streak}-day streak! 🔥` : 'Saved to history');
+        this.showCelebration(session.overallScore ?? 0, streak);
     }
 
     // ── Coaching Stages (Groq via backend) ─────────────────────────────────

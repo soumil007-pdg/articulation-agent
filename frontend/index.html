@@ -17,31 +17,165 @@
     <!-- ── Toast Container ── -->
     <div class="toast-container" id="toastContainer" aria-live="polite"></div>
 
-    <!-- ── Auth Overlay ── -->
-    <div class="auth-overlay" id="authOverlay">
-        <div class="auth-card">
-            <div class="auth-logo"><i class="fa-solid fa-comments"></i></div>
-            <h1>Articulate AI</h1>
-            <p class="auth-subtitle">Your personal communication coach, powered by AI.</p>
-            <form id="authForm" novalidate>
-                <div class="auth-field">
-                    <label for="authName">Your Name</label>
-                    <input type="text" id="authName" placeholder="e.g. Alex Johnson" autocomplete="name" required />
-                </div>
-                <div class="auth-field">
-                    <label for="authEmail">Email Address <span class="auth-optional">(optional)</span></label>
-                    <input type="email" id="authEmail" placeholder="e.g. alex@email.com" autocomplete="email" />
-                </div>
-                <p class="auth-error" id="authError"></p>
-                <button type="submit" class="auth-submit-btn">
-                    <i class="fa-solid fa-arrow-right"></i> Start Coaching
-                </button>
-                <button type="button" class="auth-skip-btn" id="authSkipBtn">
-                    Continue as Guest
-                </button>
-            </form>
-            <p class="auth-note"><i class="fa-solid fa-shield-halved"></i> Your name & email stay on your device. No cloud sign-up needed.</p>
+    <!-- ── Journey Onboarding (Fabulous-style narrative) ── -->
+    <div class="journey-overlay" id="journeyOverlay" style="display:none;">
+        <div class="journey-sky" aria-hidden="true">
+            <div class="journey-orb orb-1"></div>
+            <div class="journey-orb orb-2"></div>
+            <div class="journey-orb orb-3"></div>
+            <div class="journey-stars">
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <svg class="journey-scenery" viewBox="0 0 1440 560" preserveAspectRatio="xMidYMax slice">
+                <defs>
+                    <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#e5b04c" stop-opacity=".55"/>
+                        <stop offset="55%" stop-color="#e5b04c" stop-opacity=".14"/>
+                        <stop offset="100%" stop-color="#e5b04c" stop-opacity="0"/>
+                    </radialGradient>
+                    <linearGradient id="hillFar" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#1d5438"/>
+                        <stop offset="100%" stop-color="#123826"/>
+                    </linearGradient>
+                    <linearGradient id="hillMid" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#144230"/>
+                        <stop offset="100%" stop-color="#0d2c1e"/>
+                    </linearGradient>
+                    <linearGradient id="hillNear" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#0e3323"/>
+                        <stop offset="100%" stop-color="#081d13"/>
+                    </linearGradient>
+                </defs>
+                <circle cx="1080" cy="150" r="190" fill="url(#sunGlow)"/>
+                <circle cx="1080" cy="150" r="52" fill="#e9bc63"/>
+                <path d="M0 300 Q 240 200 480 268 T 900 250 T 1440 240 V 560 H 0 Z" fill="url(#hillFar)" opacity=".75"/>
+                <path d="M0 380 Q 320 268 640 350 T 1440 330 V 560 H 0 Z" fill="url(#hillMid)" opacity=".9"/>
+                <path d="M0 470 Q 400 370 820 450 T 1440 430 V 560 H 0 Z" fill="url(#hillNear)"/>
+            </svg>
         </div>
+
+        <div class="journey-stage">
+            <!-- Scene 1 — Opening -->
+            <section class="journey-scene active" data-scene="0">
+                <p class="journey-eyebrow">A journey to clarity</p>
+                <h1 class="journey-title"><span class="jline"><span>Every great speaker</span></span><span class="jline"><span><em>was once unclear.</em></span></span></h1>
+                <p class="journey-sub">Two minutes a day. One honest coach. A voice that finally sounds like you.</p>
+                <button class="journey-next-btn" data-next>Begin the journey</button>
+            </section>
+
+            <!-- Scene 2 — Why -->
+            <section class="journey-scene" data-scene="1">
+                <p class="journey-eyebrow">First, a question</p>
+                <h2 class="journey-question">Why do you want to become more articulate?</h2>
+                <div class="journey-choices" id="whyChoices">
+                    <button class="choice-card" data-why="career">
+                        <span class="choice-art">🎯</span>
+                        <strong>Interviews &amp; career</strong>
+                        <small>Land the role. Own the room.</small>
+                    </button>
+                    <button class="choice-card" data-why="leadership">
+                        <span class="choice-art">🌿</span>
+                        <strong>Leading people</strong>
+                        <small>Be understood the first time.</small>
+                    </button>
+                    <button class="choice-card" data-why="confidence">
+                        <span class="choice-art">🔥</span>
+                        <strong>Everyday confidence</strong>
+                        <small>Speak without second-guessing.</small>
+                    </button>
+                    <button class="choice-card" data-why="ideas">
+                        <span class="choice-art">✨</span>
+                        <strong>Expressing my ideas</strong>
+                        <small>Say what you actually mean.</small>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Scene 3 — Struggle -->
+            <section class="journey-scene" data-scene="2">
+                <p class="journey-eyebrow">Be honest — it stays on this device</p>
+                <h2 class="journey-question">Where do you struggle the most?</h2>
+                <div class="journey-choices" id="struggleChoices">
+                    <button class="choice-card" data-struggle="rambling">
+                        <span class="choice-art">🌀</span>
+                        <strong>I ramble</strong>
+                        <small>Points wander, endings vanish.</small>
+                    </button>
+                    <button class="choice-card" data-struggle="fillers">
+                        <span class="choice-art">💬</span>
+                        <strong>Um, like, you know</strong>
+                        <small>Fillers fill every pause.</small>
+                    </button>
+                    <button class="choice-card" data-struggle="nerves">
+                        <span class="choice-art">🌫️</span>
+                        <strong>Nerves &amp; flat delivery</strong>
+                        <small>The energy drains away.</small>
+                    </button>
+                    <button class="choice-card" data-struggle="words">
+                        <span class="choice-art">🔍</span>
+                        <strong>Finding the right words</strong>
+                        <small>The idea is there; the words aren't.</small>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Scene 4 — Your path + name -->
+            <section class="journey-scene" data-scene="3">
+                <p class="journey-eyebrow">Your path is chosen</p>
+                <h2 class="journey-title journey-archetype" id="journeyArchetype">The Steady Voice</h2>
+                <p class="journey-sub" id="journeyPathNote">We'll train your clarity daily — starting with the habit holding you back most.</p>
+                <form class="journey-name-form" id="journeyForm" novalidate>
+                    <input type="text" id="journeyName" placeholder="What shall we call you on this path?" autocomplete="name" maxlength="40" />
+                    <p class="journey-error" id="journeyError"></p>
+                    <button type="submit" class="journey-next-btn">Step onto the path →</button>
+                    <button type="button" class="journey-skip" id="journeySkipBtn">I'll walk as a guest</button>
+                </form>
+            </section>
+
+            <div class="journey-dots" id="journeyDots" aria-hidden="true">
+                <span class="dot active"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Celebration Overlay (session complete) ── -->
+    <div class="celebration-overlay" id="celebrationOverlay" aria-hidden="true">
+        <div class="celebration-particles" id="celebrationParticles" aria-hidden="true"></div>
+        <div class="celebration-card">
+            <svg class="celebration-laurel" viewBox="0 0 220 120" aria-hidden="true">
+                <g fill="none" stroke="#e5b04c" stroke-width="3" stroke-linecap="round">
+                    <path d="M78 108 C 44 96, 24 66, 26 28"/>
+                    <path d="M142 108 C 176 96, 196 66, 194 28"/>
+                </g>
+                <g fill="#e5b04c">
+                    <ellipse cx="30" cy="30" rx="5" ry="11" transform="rotate(-38 30 30)"/>
+                    <ellipse cx="30" cy="52" rx="5" ry="11" transform="rotate(-58 30 52)"/>
+                    <ellipse cx="38" cy="73" rx="5" ry="11" transform="rotate(-72 38 73)"/>
+                    <ellipse cx="53" cy="91" rx="5" ry="11" transform="rotate(-84 53 91)"/>
+                    <ellipse cx="72" cy="103" rx="5" ry="11" transform="rotate(-96 72 103)"/>
+                    <ellipse cx="190" cy="30" rx="5" ry="11" transform="rotate(38 190 30)"/>
+                    <ellipse cx="190" cy="52" rx="5" ry="11" transform="rotate(58 190 52)"/>
+                    <ellipse cx="182" cy="73" rx="5" ry="11" transform="rotate(72 182 73)"/>
+                    <ellipse cx="167" cy="91" rx="5" ry="11" transform="rotate(84 167 91)"/>
+                    <ellipse cx="148" cy="103" rx="5" ry="11" transform="rotate(96 148 103)"/>
+                </g>
+            </svg>
+            <p class="celebration-eyebrow">Session complete</p>
+            <div class="celebration-score"><span id="celebrationScore">0.0</span><small>/ 10</small></div>
+            <p class="celebration-line" id="celebrationLine">Your clarity is growing.</p>
+            <div class="celebration-streak" id="celebrationStreak" style="display:none;">
+                <i class="fa-solid fa-fire"></i> <span id="celebrationStreakText"></span>
+            </div>
+            <button class="journey-next-btn" id="celebrationContinueBtn">See your coaching →</button>
+        </div>
+    </div>
+
+    <!-- ── Ambient scenery behind the app ── -->
+    <div class="ambient-layer" aria-hidden="true">
+        <div class="ambient-orb amb-1"></div>
+        <div class="ambient-orb amb-2"></div>
+        <div class="ambient-orb amb-3"></div>
     </div>
 
     <!-- ── Main App ── -->
@@ -100,10 +234,10 @@
                     <p class="focus-drill" id="focusDrill"></p>
                 </div>
                 <div class="daily-card challenge-card" id="dailyChallengeCard">
-                    <div class="daily-card-label"><i class="fa-solid fa-trophy"></i> Today's Challenge</div>
+                    <div class="daily-card-label"><i class="fa-solid fa-trophy"></i> Today's Ritual</div>
                     <p class="challenge-text" id="challengeText"></p>
                     <button class="challenge-btn" id="useChallengeBtn">
-                        <i class="fa-solid fa-play"></i> Practice this now
+                        <i class="fa-solid fa-play"></i> Begin today's ritual
                     </button>
                 </div>
             </div>
