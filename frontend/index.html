@@ -188,6 +188,9 @@
                     <p>Your Personal Communication Coach</p>
                 </div>
                 <div class="header-actions">
+                    <button class="icon-btn" id="academyBtn" title="The Academy — learn the devices" aria-label="Open the Academy">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </button>
                     <button class="icon-btn" id="dashboardBtn" title="Progress dashboard" aria-label="Open progress dashboard">
                         <i class="fa-solid fa-chart-line"></i>
                     </button>
@@ -405,6 +408,15 @@
                         <h4><i class="fa-solid fa-microphone-lines"></i> Delivery Scores</h4>
                         <div class="detailed-scores" id="deliveryScores"></div>
                     </div>
+                    <div class="persuasion-box" id="persuasionBox" style="display:none;">
+                        <h4><i class="fa-solid fa-scale-balanced"></i> The Persuasion Triangle <small>Aristotle's three appeals · ▲ marks the greats</small></h4>
+                        <div id="persuasionBars"></div>
+                        <p class="persuasion-advice" id="persuasionAdvice"></p>
+                    </div>
+                    <div class="craft-box" id="craftBox" style="display:none;">
+                        <h4><i class="fa-solid fa-feather"></i> Words in the Air <small>the Noonan craft check — computed instantly, no AI</small></h4>
+                        <div class="craft-chips" id="craftChips"></div>
+                    </div>
                     <div class="explanation interpreted-box" id="interpretedContainer" style="display:none;">
                         <h5><i class="fa-solid fa-ear-listen"></i> What I Heard You Saying</h5>
                         <p id="interpretedMeaning"></p>
@@ -432,7 +444,7 @@
                     <div class="verbal-section" id="verbalPacingSection" style="display:none;">
                         <h4><i class="fa-solid fa-gauge-high"></i> Pacing by Sentence</h4>
                         <div class="wpm-bars" id="wpmBars"></div>
-                        <p class="verbal-legend"><span class="wpm-slow"></span> Under 100 wpm &nbsp; <span class="wpm-ideal"></span> 100–150 wpm &nbsp; <span class="wpm-fast"></span> Over 150 wpm</p>
+                        <p class="verbal-legend"><span class="wpm-slow"></span> Under 120 wpm &nbsp; <span class="wpm-ideal"></span> 120–190 wpm (TED ideal: 150–190) &nbsp; <span class="wpm-fast"></span> Over 190 wpm</p>
                     </div>
 
                     <div class="verbal-section" id="verbalEnergySection" style="display:none;">
@@ -582,6 +594,20 @@
                 <p><a href="https://console.groq.com/keys" target="_blank" rel="noopener">Get a free Groq API key</a></p>
                 <p>Backend status: <span id="backendStatus">checking…</span></p>
             </div>
+        </div>
+    </div>
+
+    <!-- ── Academy Modal (the teaching library) ── -->
+    <div class="modal-backdrop" id="academyBackdrop"></div>
+    <div class="modal academy-modal" id="academyModal" role="dialog" aria-labelledby="academyTitle" aria-hidden="true">
+        <div class="modal-header">
+            <h3 id="academyTitle"><i class="fa-solid fa-graduation-cap"></i> The Academy</h3>
+            <button class="icon-btn" id="closeAcademyBtn" aria-label="Close academy">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="modal-body" id="academyBody">
+            <!-- Populated by Academy.render() -->
         </div>
     </div>
 

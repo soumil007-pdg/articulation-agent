@@ -553,7 +553,7 @@ class DailyPractice {
           why: "TED speakers are coached on one arc: concrete moment → universal principle. Stories are remembered far better than facts alone (Stanford, Aaker).",
           drill: "Start today's answer with a specific moment (\"Last Tuesday at 9am…\") and end with the lesson it proves." },
         { key: 'pacing', name: 'Pacing & Strategic Pauses', icon: 'fa-gauge-high',
-          why: "Great speakers average 120–150 wpm but vary it — slowing ~20% before key points. A deliberate 1–2s pause before your main idea signals importance.",
+          why: "The TED research: audiobooks are narrated at 150 wpm, and the most-watched talks run 150–190 — conversational speed, not podium speed. Slow ~20% before key points; a deliberate 1–2s pause signals importance.",
           drill: "Pause for a full second before your single most important sentence today. Silence is emphasis." },
         { key: 'fillers', name: 'Filler Elimination', icon: 'fa-comment-slash',
           why: "Listeners judge fluency within seconds; frequent fillers measurably lower perceived confidence. The fix is replacing fillers with silence, not talking faster.",
@@ -749,6 +749,163 @@ class ProgressDashboard {
 // ────────────────────────────────────────────────────────────────────────────
 // ArticulateCoach — main app
 // ────────────────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// THE ACADEMY — the teaching library.
+// Pedagogy per Farnsworth: a device is learned from master examples until it
+// becomes instinct, never from definitions alone. Each lesson: one line of
+// definition, the masters, then a drill that pipes straight into the coach.
+// ═══════════════════════════════════════════════════════════════════════════
+class Academy {
+    static LESSONS = [
+        // ── I. Repetition of words and phrases ──────────────────────────────
+        { family: 'Repetition', name: 'Anaphora', what: 'Repeat the opening words of successive sentences to build drumbeat force.',
+          ex: [['We shall fight on the beaches, we shall fight on the landing grounds, we shall fight in the fields…', 'Churchill, 1940'], ['I have a dream that… I have a dream that… I have a dream today.', 'Martin Luther King Jr., 1963']],
+          drill: 'Describe a goal you refuse to give up on — three sentences, each beginning with the same three words.' },
+        { family: 'Repetition', name: 'Epistrophe', what: 'Repeat the ending instead — the echo lands after each thought.',
+          ex: [['…government of the people, by the people, for the people.', 'Lincoln, Gettysburg'], ['When I was a child, I spake as a child, I understood as a child, I thought as a child.', '1 Corinthians 13']],
+          drill: 'Make a case for something you believe — three sentences that all end on the same word.' },
+        { family: 'Repetition', name: 'Symploce', what: 'Repeat both the start and the end — anaphora and epistrophe at once.',
+          ex: [['When there is talk of hatred, let us stand up and talk against it. When there is talk of violence, let us stand up and talk against it.', 'Attributed pattern, classical']],
+          drill: 'Name two problems you see around you, using the same opening AND closing words for each.' },
+        { family: 'Repetition', name: 'Anadiplosis', what: 'End a clause with a word, begin the next clause with it — a chain of logic you can hear.',
+          ex: [['Suffering produces perseverance; perseverance, character; and character, hope.', 'Romans 5'], ['Our doubt is our passion, and our passion is our task.', 'Henry James']],
+          drill: 'Explain how a small habit leads to a big outcome, chaining each sentence to the last word of the one before.' },
+        { family: 'Repetition', name: 'Epizeuxis', what: 'Repeat a word immediately, no words in between — raw emphasis.',
+          ex: [['Never give in — never, never, never.', 'Churchill'], ['The horror! The horror!', 'Conrad']],
+          drill: 'State the one quality your work demands most, repeating that word three times in one sentence — then justify it.' },
+        { family: 'Repetition', name: 'Polyptoton', what: 'Repeat the root of a word in different forms — the idea rhymes with itself.',
+          ex: [['Let us never negotiate out of fear. But let us never fear to negotiate.', 'Kennedy, 1961'], ['Judge not, that ye be not judged.', 'Matthew 7']],
+          drill: 'Give one piece of advice that uses the same word twice — once as a noun, once as a verb.' },
+
+        // ── II. Structural matters ──────────────────────────────────────────
+        { family: 'Structure', name: 'Isocolon & Rule of Three', what: 'Parallel phrases of equal shape — three is the magic count the ear expects.',
+          ex: [['Life, liberty, and the pursuit of happiness.', 'Declaration of Independence'], ['We shall pay any price, bear any burden, meet any hardship.', 'Kennedy, 1961']],
+          drill: 'Pitch an idea in one sentence with exactly three parallel items — make the third the strongest.' },
+        { family: 'Structure', name: 'Chiasmus', what: 'Say it, then reverse it — A-B, B-A. The reversal makes it unforgettable.',
+          ex: [['Ask not what your country can do for you — ask what you can do for your country.', 'Kennedy, 1961'], ['When the going gets tough, the tough get going.', 'Proverbial']],
+          drill: 'Take your strongest opinion about work or life and express it as a reversal: A-B, then B-A.' },
+        { family: 'Structure', name: 'Anastrophe', what: 'Invert the expected word order to spotlight one word.',
+          ex: [['This much we pledge — and more.', 'Kennedy, 1961'], ['Powerful you have become.', 'The pattern parodied by Yoda']],
+          drill: 'Describe today\'s most important task, but pull its key word to the front of the sentence unnaturally — feel the emphasis shift.' },
+        { family: 'Structure', name: 'Polysyndeton', what: 'Pile on conjunctions — and… and… and — so the list feels endless, overwhelming.',
+          ex: [['And the rain descended, and the floods came, and the winds blew, and beat upon that house.', 'Matthew 7']],
+          drill: 'Describe your busiest recent day in one long sentence, joining everything with "and" — hear how it swells.' },
+        { family: 'Structure', name: 'Asyndeton', what: 'Drop the conjunctions entirely — the clipped list feels fast, decisive, done.',
+          ex: [['I came, I saw, I conquered.', 'Julius Caesar'], ['…that we shall pay any price, bear any burden, meet any hardship, support any friend, oppose any foe.', 'Kennedy, 1961']],
+          drill: 'Retell your last accomplishment in three clipped clauses with no "and" — verbs first.' },
+        { family: 'Structure', name: 'Ellipsis', what: 'Leave out words the listener will supply — trust makes it intimate.',
+          ex: [['The first casualty of war is truth; the second, patience.', 'Classical pattern']],
+          drill: 'Compare two things you know well in one sentence, dropping the repeated verb in the second half.' },
+
+        // ── III. Dramatic devices ───────────────────────────────────────────
+        { family: 'Drama', name: 'Metaphor & Analogy', what: 'Make the abstract concrete. Aristotle: "the greatest thing by far is to be a master of metaphor."',
+          ex: [['An iron curtain has descended across the continent.', 'Churchill, 1946'], ['All the world\'s a stage.', 'Shakespeare']],
+          drill: 'Explain what you do for work as if it were a completely different profession — a gardener, a pilot, a chef.' },
+        { family: 'Drama', name: 'Storytelling Arc', what: 'A specific moment, a struggle, a turn, a universal point. The most persuasive minutes ever measured were 65% story.',
+          ex: [['Every memorable TED talk opens with somebody, somewhere, wanting something — and hitting a wall.', 'The Stevenson pattern']],
+          drill: 'Tell a 60-second story about a moment you changed your mind — name the place, the person, the exact sentence that turned you.' },
+        { family: 'Drama', name: 'Rhetorical Question (Erotema)', what: 'Ask a question that answers itself — the listener\'s mind says the answer with you.',
+          ex: [['How long must we wait? How many times must we ask?', 'The protest pattern']],
+          drill: 'Argue for a change you want by asking three questions in a row that all point at the same obvious answer.' },
+        { family: 'Drama', name: 'Hypophora', what: 'Ask the question your audience is thinking — then answer it yourself. You control the debate.',
+          ex: [['You ask, what is our aim? I can answer in one word: Victory.', 'Churchill, 1940']],
+          drill: 'Present your plan by first voicing the toughest objection to it as a question — then answer in one hard sentence.' },
+        { family: 'Drama', name: 'Antithesis', what: 'Balance opposites in one frame — contrast is the fastest path to clarity.',
+          ex: [['That\'s one small step for man, one giant leap for mankind.', 'Armstrong, 1969'], ['It was the best of times, it was the worst of times.', 'Dickens']],
+          drill: 'Describe where your team/field is today versus where it should be — one sentence, perfectly balanced halves.' },
+        { family: 'Drama', name: 'Litotes', what: 'Affirm by denying the opposite — "not uncommon" — understatement that draws the listener in.',
+          ex: [['The gods, it appears, are not without a sense of humor.', 'Classical pattern'], ['It\'s no small thing.', 'Everyday litotes']],
+          drill: 'Praise something you genuinely admire using only negations of its opposite ("not unimpressive, and hardly an accident…").' },
+        { family: 'Drama', name: 'Metanoia', what: 'Correct yourself mid-sentence to sharpen — "hundreds, no, thousands."',
+          ex: [['This will take weeks — no, months — to undo.', 'The self-correction pattern']],
+          drill: 'State the size of a problem you care about, then interrupt yourself to revise the number upward.' },
+        { family: 'Drama', name: 'Praeteritio', what: 'Mention it by refusing to mention it — "I won\'t even bring up the cost…" (you just did).',
+          ex: [['I will not speak of his record on the matter — the record speaks for itself.', 'The courtroom pattern']],
+          drill: 'Argue for your side while "declining" to mention your opponent\'s two biggest weaknesses — by name.' },
+
+        // ── The principles (Noonan, Aristotle, TED) ─────────────────────────
+        { family: 'Principles', name: 'Small Sturdy Words', what: 'Noonan: big things are said in small words. Soldiers don\'t say "I have been shot" — they say "I\'m hit."',
+          ex: [['I love you. It\'s over. It\'s a boy. He\'s dead. We\'re going to win.', 'The words of big events'], ['Simple, unadorned, direct, declarative — that is what makes a speech move forward with good speed.', 'Noonan, On Speaking Well']],
+          drill: 'Explain the most complex part of your work using only words a 12-year-old knows — no term over three syllables.' },
+        { family: 'Principles', name: 'Words in the Air', what: 'A speech has no rewind button. Every sentence must land on the FIRST hearing.',
+          ex: [['Tell \'em what you\'re gonna tell \'em — tell \'em — then tell \'em what you told \'em.', 'The oldest rule in communication']],
+          drill: 'Take any past answer of yours, announce its point in sentence one, repeat the point mid-way in new words, and close by tying it up.' },
+        { family: 'Principles', name: 'The Persuasion Triangle', what: 'Aristotle: persuasion = ethos (trust) + pathos (feeling) + logos (logic). The greatest talk ever measured: 65% pathos.',
+          ex: [['Bryan Stevenson earned the longest standing ovation in TED history — 65% of his talk was stories about his grandmother, Rosa Parks, and a janitor.', 'Talk Like TED']],
+          drill: 'Make an argument you usually support with data — but this time lead with one true story and let the data play backup.' },
+        { family: 'Principles', name: 'The 18-Minute Discipline', what: 'TED caps every talk at 18 minutes because attention is a finite resource. Constraint creates clarity.',
+          ex: [['The Gettysburg Address: 272 words, under three minutes, immortal.', 'Lincoln, 1863']],
+          drill: 'Take the longest thing you\'ve explained this week and deliver it again — in exactly 60 seconds.' },
+    ];
+
+    static render() {
+        const body = $('academyBody');
+        const families = ['Repetition', 'Structure', 'Drama', 'Principles'];
+        const famIcons = { Repetition: 'fa-repeat', Structure: 'fa-cubes', Drama: 'fa-masks-theater', Principles: 'fa-compass' };
+        const famNotes = {
+            Repetition: 'Farnsworth, Part I — the drumbeat figures',
+            Structure: 'Farnsworth, Part II — the architecture figures',
+            Drama: 'Farnsworth, Part III — the theatrical figures',
+            Principles: 'Noonan · Aristotle · the TED research',
+        };
+        body.innerHTML = '';
+
+        const intro = document.createElement('p');
+        intro.className = 'academy-intro';
+        intro.textContent = 'Devices become instinct through examples, not definitions. Read the masters, then run the drill — it pipes straight into your coach.';
+        body.appendChild(intro);
+
+        for (const fam of families) {
+            const section = document.createElement('div');
+            section.className = 'academy-family';
+            section.innerHTML = `<h4 class="dash-section-title"><i class="fa-solid ${famIcons[fam]}"></i> ${fam} <small></small></h4>`;
+            section.querySelector('small').textContent = famNotes[fam];
+
+            for (const lesson of Academy.LESSONS.filter(l => l.family === fam)) {
+                const det = document.createElement('details');
+                det.className = 'academy-lesson';
+                const sum = document.createElement('summary');
+                sum.innerHTML = `<strong></strong><span class="academy-what"></span>`;
+                sum.querySelector('strong').textContent = lesson.name;
+                sum.querySelector('.academy-what').textContent = lesson.what;
+                det.appendChild(sum);
+
+                const inner = document.createElement('div');
+                inner.className = 'academy-lesson-body';
+                for (const [quote, by] of lesson.ex) {
+                    const bq = document.createElement('blockquote');
+                    bq.className = 'academy-example';
+                    bq.innerHTML = `<p></p><cite></cite>`;
+                    bq.querySelector('p').textContent = `“${quote}”`;
+                    bq.querySelector('cite').textContent = `— ${by}`;
+                    inner.appendChild(bq);
+                }
+                const drillBtn = document.createElement('button');
+                drillBtn.className = 'academy-drill-btn';
+                drillBtn.innerHTML = `<i class="fa-solid fa-dumbbell"></i> Drill: <span></span>`;
+                drillBtn.querySelector('span').textContent = lesson.drill;
+                drillBtn.addEventListener('click', () => Academy.startDrill(lesson));
+                inner.appendChild(drillBtn);
+                det.appendChild(inner);
+                section.appendChild(det);
+            }
+            body.appendChild(section);
+        }
+    }
+
+    static startDrill(lesson) {
+        window.app.closeAcademy();
+        const promptEl = $('practicePrompt');
+        promptEl.textContent = `Academy drill — ${lesson.name}: ${lesson.drill}`;
+        promptEl.style.display = 'block';
+        window.app.currentTopic = `academy drill: ${lesson.name}`;
+        $('userInput').value = '';
+        $('userInput').focus();
+        promptEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        Toast.success(`Drill loaded: ${lesson.name}. Write or record your attempt.`);
+    }
+}
+
 class ArticulateCoach {
     constructor() {
         this.apiUrl = '/coach';
@@ -1059,6 +1216,9 @@ class ArticulateCoach {
 
         // Progress dashboard
         $('dashboardBtn').addEventListener('click', () => this.toggleDashboard());
+        $('academyBtn').addEventListener('click', () => this.toggleAcademy());
+        $('closeAcademyBtn').addEventListener('click', () => this.closeAcademy());
+        $('academyBackdrop').addEventListener('click', () => this.closeAcademy());
         $('closeDashboardBtn').addEventListener('click', () => this.closeDashboard());
         $('dashboardBackdrop').addEventListener('click', () => this.closeDashboard());
 
@@ -1424,6 +1584,7 @@ class ArticulateCoach {
         this.beginProcessing($('processBtn'));
         $('deliveryScoresContainer').style.display = 'none';
         $('deliveryFeedbackContainer').style.display = 'none';
+        this.renderCraft(input);
 
         const session = this.makeSession({ text: input });
         await this.runPipeline(input, session);
@@ -1446,6 +1607,7 @@ class ArticulateCoach {
 
         this.viewingPast = false;
         this.beginProcessing($('processAudioBtn'));
+        this.renderCraft(transcript);
 
         const session = this.makeSession({
             text: '',
@@ -1657,10 +1819,16 @@ ${this.intentLine()}
 First, state in ONE sentence what you understood the speaker's core message and intent to be (who/what they are referring to, and the point they are making). If the text seems to contain speech-to-text transcription errors (words that don't fit the context), interpret the intended meaning charitably rather than penalising the speaker.
 Then provide a brief justification for each score, an overall score (average), and a single key action item.
 
+Also perform Aristotle's persuasion analysis. Classify the content of the text into three appeals and estimate what percentage of it serves each (must sum to 100):
+- ETHOS: credibility — personal experience, credentials, trustworthiness signals
+- PATHOS: emotion — stories, imagery, human stakes, feeling
+- LOGOS: logic — facts, data, reasons, structure of argument
+Benchmark: the most persuasive talks ever measured run roughly 65% pathos, 25% logos, 10% ethos. Most professional speech is inverted (heavy logos, near-zero pathos). Give one sentence of advice on rebalancing — usually "add a story" — with a concrete suggestion drawn from this text's own content.
+
 Text: "${this.escapeForPrompt(text)}"
 
 Respond in this exact JSON format:
-{"interpretedMeaning":"","scores":{"clarity":{"score":0,"justification":""},"conciseness":{"score":0,"justification":""},"vocabulary":{"score":0,"justification":""},"structure":{"score":0,"justification":""},"impact":{"score":0,"justification":""},"grammar":{"score":0,"justification":""},"tone":{"score":0,"justification":""}},"overallScore":0,"keyActionItem":""}`;
+{"interpretedMeaning":"","scores":{"clarity":{"score":0,"justification":""},"conciseness":{"score":0,"justification":""},"vocabulary":{"score":0,"justification":""},"structure":{"score":0,"justification":""},"impact":{"score":0,"justification":""},"grammar":{"score":0,"justification":""},"tone":{"score":0,"justification":""}},"overallScore":0,"keyActionItem":"","persuasion":{"ethos":10,"pathos":25,"logos":65,"advice":""}}`;
         const response = await this.callBackend(prompt);
         return JSON.parse(response);
     }
@@ -1716,6 +1884,110 @@ Respond in this exact JSON format:
             el.appendChild(item);
         }
         $('keyAdvice').textContent = data.keyActionItem || '';
+        this.renderPersuasion(data.persuasion);
+    }
+
+    // ── Persuasion Triangle (Aristotle: ethos / pathos / logos) ────────────
+    // Benchmark: Bryan Stevenson's TED talk — longest standing ovation in
+    // TED history — measured at 65% pathos, 25% logos, 10% ethos.
+    static PERSUASION_BENCHMARK = { pathos: 65, logos: 25, ethos: 10 };
+
+    renderPersuasion(p) {
+        const box = $('persuasionBox');
+        if (!box) return;
+        if (!p || [p.ethos, p.pathos, p.logos].some(v => typeof v !== 'number')) {
+            box.style.display = 'none';
+            return;
+        }
+        box.style.display = 'block';
+
+        const rows = [
+            { key: 'pathos', label: 'Pathos — emotion & story', cls: 'appeal-pathos' },
+            { key: 'logos',  label: 'Logos — facts & reasons',  cls: 'appeal-logos' },
+            { key: 'ethos',  label: 'Ethos — credibility',      cls: 'appeal-ethos' },
+        ];
+        const bars = $('persuasionBars');
+        bars.innerHTML = '';
+        for (const r of rows) {
+            const val = Math.max(0, Math.min(100, p[r.key]));
+            const bench = ArticulateCoach.PERSUASION_BENCHMARK[r.key];
+            const row = document.createElement('div');
+            row.className = 'appeal-row';
+            row.innerHTML = `
+                <span class="appeal-label"></span>
+                <div class="appeal-bar-wrap">
+                    <div class="appeal-bar ${r.cls}" style="width:${val}%"></div>
+                    <span class="appeal-bench" style="left:${bench}%" title="The greats: ${bench}%"></span>
+                </div>
+                <span class="appeal-value">${val}%</span>`;
+            row.querySelector('.appeal-label').textContent = r.label;
+            bars.appendChild(row);
+        }
+        $('persuasionAdvice').textContent = p.advice || '';
+    }
+
+    // ── Noonan Craft Check — computed locally, no API call ─────────────────
+    // "Speeches are words in the air": big things are said in small words,
+    // and a sentence must be understood the first time it is heard.
+    countSyllables(word) {
+        const w = word.toLowerCase().replace(/[^a-z]/g, '');
+        if (w.length <= 3) return 1;
+        const groups = w.replace(/e$/, '').match(/[aeiouy]+/g);
+        return Math.max(1, groups ? groups.length : 1);
+    }
+
+    analyzeCraft(text) {
+        const words = (text.match(/[A-Za-z’']+/g) || []);
+        const sentences = text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.split(/\s+/).length >= 2);
+        if (!words.length || !sentences.length) return null;
+
+        const syllables = words.map(w => this.countSyllables(w));
+        const avgSyl = syllables.reduce((a, b) => a + b, 0) / words.length;
+        const sturdyPct = Math.round(100 * syllables.filter(s => s <= 2).length / words.length);
+        const sentLens = sentences.map(s => s.split(/\s+/).length);
+        const avgSent = Math.round(sentLens.reduce((a, b) => a + b, 0) / sentences.length);
+        const longSents = sentLens.filter(l => l > 25).length;
+
+        return {
+            avgSyl: avgSyl.toFixed(2),
+            sturdyPct,
+            avgSent,
+            longSents,
+            simplicity: sturdyPct >= 85 ? 'good' : sturdyPct >= 75 ? 'mid' : 'warn',
+            hearability: longSents === 0 && avgSent <= 20 ? 'good' : longSents <= 1 ? 'mid' : 'warn',
+        };
+    }
+
+    renderCraft(text) {
+        const box = $('craftBox');
+        if (!box) return;
+        const c = this.analyzeCraft(text);
+        if (!c) { box.style.display = 'none'; return; }
+        box.style.display = 'block';
+
+        const chip = (state, icon, label, value, tip) => {
+            const el = document.createElement('span');
+            el.className = `craft-chip craft-${state}`;
+            el.innerHTML = `<i class="fa-solid ${icon}"></i> <strong></strong> <em></em>`;
+            el.querySelector('strong').textContent = value;
+            el.querySelector('em').textContent = label;
+            el.title = tip;
+            return el;
+        };
+
+        const chips = $('craftChips');
+        chips.innerHTML = '';
+        chips.append(
+            chip(c.simplicity, 'fa-cube', 'small sturdy words', `${c.sturdyPct}%`,
+                'Noonan: big things are said in small words. Aim for 85%+ words of 1–2 syllables.'),
+            chip(c.simplicity, 'fa-wave-square', 'syllables per word', c.avgSyl,
+                'Lincoln averaged ~1.3. Under 1.5 sounds spoken; over 1.7 sounds like a memo.'),
+            chip(c.hearability, 'fa-ear-listen', 'words per sentence', `${c.avgSent}`,
+                'A sentence must land on first hearing. Under 20 words is safe for the ear.'),
+            chip(c.longSents === 0 ? 'good' : c.longSents <= 1 ? 'mid' : 'warn', 'fa-scissors',
+                'marathon sentences', `${c.longSents}`,
+                'Sentences over 25 words lose a listening audience. Cut them in two.'),
+        );
     }
 
     async scoreDelivery(audioData) {
@@ -1744,7 +2016,7 @@ Respond in this exact JSON format:
 BASIC METRICS:
 - Total words: ${m.total_words || 0}
 - Duration: ${m.duration_seconds || 0} seconds
-- Overall speech rate: ${m.words_per_minute || 0} wpm (ideal: 120–150 wpm)
+- Overall speech rate: ${m.words_per_minute || 0} wpm (research benchmark: 150–190 wpm is the conversational ideal — audiobook narration is 150; under 120 drags, over 220 is auctioneer territory)
 - Filler words: ${fillers}
 - Pauses (>0.5s): ${m.total_pauses || 0}, long pauses (>1.5s): ${m.long_pauses || 0}
 ${audioEmotionLine}
@@ -1798,7 +2070,7 @@ Respond in this exact JSON format:
             if (barsEl) {
                 const maxWpm = Math.max(...p.sentence_wpm.map(s => s.wpm), 200);
                 barsEl.innerHTML = p.sentence_wpm.map(s => {
-                    const cls = s.wpm < 100 ? 'slow' : s.wpm > 150 ? 'fast' : 'ideal';
+                    const cls = s.wpm < 120 ? 'slow' : s.wpm > 190 ? 'fast' : 'ideal';
                     const w = Math.round((s.wpm / maxWpm) * 100);
                     const label = s.sentence.length > 40 ? s.sentence.substring(0, 40) + '…' : s.sentence;
                     return `<div class="wpm-row">
@@ -1983,27 +2255,37 @@ Respond in this exact JSON format:
 
     // ── Rhetorical Devices Stage ───────────────────────────────────────────
     async analyzeRhetoric(text) {
-        const prompt = `You are a master teacher of classical rhetoric — the toolkit of Lincoln, Kennedy, and King.
+        const prompt = `You are a master teacher of classical rhetoric in the tradition of Farnsworth's Classical English Rhetoric — the toolkit of Lincoln, Kennedy, Churchill, and King.
 ${this.audienceLine()}
 
-Analyze this text for FIVE rhetorical devices. For each, state whether it is present and quote the exact evidence if found:
-1. Rule of Three — three parallel items ("of the people, by the people, for the people")
-2. Anaphora — repeated phrase opening successive sentences ("I have a dream that…")
-3. Antithesis — balanced contrast ("ask not what your country can do for you…")
-4. Metaphor / Analogy — abstract idea made concrete through comparison
-5. Storytelling Arc — a concrete moment or example that builds to a universal point
+Scan this text against the FULL classical device catalog, in three families:
 
-Then: give a rhetorical impact score 1–10 (most everyday text scores 2–4; don't inflate). Write a 2-sentence summary of the text's rhetorical character. Finally, choose the ONE device that would most elevate this specific text and rewrite ONE sentence from it demonstrating that device.
+REPETITION: Anaphora (repeated openings), Epistrophe (repeated endings), Symploce (both), Anadiplosis (ending repeated as next beginning), Epizeuxis (immediate repetition), Polyptoton (root repeated in different forms)
+STRUCTURE: Isocolon / Rule of Three (parallel structure), Chiasmus (reversal: "ask not what your country…"), Anastrophe (inverted word order), Polysyndeton (extra conjunctions), Asyndeton (dropped conjunctions: "I came, I saw, I conquered"), Ellipsis (words omitted)
+DRAMA: Metaphor/Analogy, Storytelling Arc (a concrete moment building to a universal point), Rhetorical Question (erotema), Hypophora (asking then answering), Antithesis (balanced contrast), Litotes (affirming by negating: "not uncommon"), Metanoia (self-correction for emphasis), Praeteritio (mentioning by declining to mention)
+
+Report ONLY devices actually present (with the exact quote as evidence and the family it belongs to) — most everyday text contains 0–3. Do not stretch.
+Then list the TWO devices that would most elevate THIS text as opportunities (name + family + one-line tip each).
+Farnsworth's warning: too much ornament is worse than none, and figures only work on substance worth saying. If the text overuses any device (3+ instances of one figure, or ornament on trivial content), name it in overuseWarning; otherwise empty string.
+Give a rhetorical impact score 1–10 (everyday speech scores 2–4; don't inflate), a 2-sentence summary of the text's rhetorical character, and rewrite ONE sentence from the text demonstrating the single most valuable missing device.
 
 Text: "${this.escapeForPrompt(text)}"
 
 Respond in this exact JSON format:
-{"devices":[{"name":"Rule of Three","found":false,"evidence":""},{"name":"Anaphora","found":false,"evidence":""},{"name":"Antithesis","found":false,"evidence":""},{"name":"Metaphor/Analogy","found":false,"evidence":""},{"name":"Storytelling Arc","found":false,"evidence":""}],"rhetoricalScore":0,"summary":"","suggestion":{"device":"","tip":"","exampleRewrite":""}}`;
+{"found":[{"name":"","family":"repetition|structure|drama","evidence":""}],"opportunities":[{"name":"","family":"","tip":""}],"overuseWarning":"","rhetoricalScore":0,"summary":"","suggestion":{"device":"","tip":"","exampleRewrite":""}}`;
         const response = await this.callBackend(prompt);
         return JSON.parse(response);
     }
 
     displayRhetoric(data) {
+        // Back-compat: sessions saved in the 5-device era use `devices[]`
+        if (!data.found && Array.isArray(data.devices)) {
+            data = {
+                ...data,
+                found: data.devices.filter(d => d.found).map(d => ({ name: d.name, family: '', evidence: d.evidence })),
+                opportunities: data.devices.filter(d => !d.found).slice(0, 2).map(d => ({ name: d.name, family: '', tip: '' })),
+            };
+        }
         // Restore section markup in case it was overwritten by a skip message
         const section = $('rhetoricSection');
         if (!$('deviceChips')) {
@@ -2029,27 +2311,62 @@ Respond in this exact JSON format:
             <div class="rhetoric-score-caption">Rhetorical impact — most everyday speech scores 2–4. Lincoln territory starts at 8.</div>
         `;
 
+        const famBadge = (family) => {
+            if (!family) return '';
+            const f = String(family).toLowerCase();
+            return f.includes('rep') ? 'Repetition' : f.includes('struct') ? 'Structure' : 'Drama';
+        };
+
         const chips = $('deviceChips');
         chips.innerHTML = '';
-        (data.devices || []).forEach(d => {
+
+        const found = data.found || [];
+        if (!found.length) {
+            const none = document.createElement('div');
+            none.className = 'device-chip device-missing';
+            none.innerHTML = `<span><i class="fa-solid fa-seedling"></i> No classical devices yet — honest speech is the right base. Add one below.</span>`;
+            chips.appendChild(none);
+        }
+        found.forEach(d => {
             const chip = document.createElement('div');
-            chip.className = `device-chip ${d.found ? 'device-found' : 'device-missing'}`;
-            const icon = document.createElement('i');
-            icon.className = `fa-solid ${d.found ? 'fa-circle-check' : 'fa-circle-plus'}`;
-            const name = document.createElement('span');
-            name.textContent = d.name;
-            chip.append(icon, name);
-            if (d.found && d.evidence) {
-                chip.title = `Found: "${d.evidence}"`;
+            chip.className = 'device-chip device-found';
+            chip.innerHTML = `<span><i class="fa-solid fa-circle-check"></i> <strong></strong> <em class="device-family"></em></span>`;
+            chip.querySelector('strong').textContent = d.name;
+            chip.querySelector('.device-family').textContent = famBadge(d.family);
+            if (d.evidence) {
                 const quote = document.createElement('small');
                 quote.className = 'device-evidence';
-                quote.textContent = `"${d.evidence.slice(0, 80)}${d.evidence.length > 80 ? '…' : ''}"`;
+                quote.textContent = `"${d.evidence.slice(0, 90)}${d.evidence.length > 90 ? '…' : ''}"`;
                 chip.appendChild(quote);
-            } else {
-                chip.title = 'Not used yet — an opportunity';
             }
             chips.appendChild(chip);
         });
+        (data.opportunities || []).forEach(d => {
+            const chip = document.createElement('div');
+            chip.className = 'device-chip device-missing';
+            chip.innerHTML = `<span><i class="fa-solid fa-circle-plus"></i> <strong></strong> <em class="device-family"></em></span>`;
+            chip.querySelector('strong').textContent = d.name;
+            chip.querySelector('.device-family').textContent = famBadge(d.family);
+            if (d.tip) {
+                const tip = document.createElement('small');
+                tip.className = 'device-evidence';
+                tip.textContent = d.tip;
+                chip.appendChild(tip);
+            }
+            chips.appendChild(chip);
+        });
+
+        // Farnsworth's restraint rule: too much ornament is worse than none
+        if (data.overuseWarning) {
+            const warn = document.createElement('div');
+            warn.className = 'device-chip device-overuse';
+            warn.innerHTML = `<span><i class="fa-solid fa-triangle-exclamation"></i> <strong>Restraint check</strong></span>`;
+            const detail = document.createElement('small');
+            detail.className = 'device-evidence';
+            detail.textContent = data.overuseWarning;
+            warn.appendChild(detail);
+            chips.appendChild(warn);
+        }
 
         $('rhetoricSummary').textContent = data.summary || '';
 
@@ -2224,6 +2541,7 @@ Respond in this exact JSON format:
             .forEach(id => { const el = $(id); if (el) el.textContent = ''; });
         const interpretedBox = $('interpretedContainer');
         if (interpretedBox) interpretedBox.style.display = 'none';
+        ['persuasionBox', 'craftBox'].forEach(id => { const el = $(id); if (el) el.style.display = 'none'; });
         const verbalCard = $('verbalCoachingCard');
         if (verbalCard) verbalCard.style.display = 'none';
     }
@@ -2293,11 +2611,30 @@ Respond in this exact JSON format:
         this.closeSettings();
         this.closeShortcuts();
         this.closeDashboard();
+        this.closeAcademy();
     }
 
     toggleDashboard() {
         if ($('dashboardModal').classList.contains('open')) this.closeDashboard();
         else this.openDashboard();
+    }
+
+    toggleAcademy() {
+        if ($('academyModal').classList.contains('open')) this.closeAcademy();
+        else this.openAcademy();
+    }
+
+    openAcademy() {
+        Academy.render();
+        $('academyModal').classList.add('open');
+        $('academyModal').setAttribute('aria-hidden', 'false');
+        $('academyBackdrop').classList.add('open');
+    }
+
+    closeAcademy() {
+        $('academyModal').classList.remove('open');
+        $('academyModal').setAttribute('aria-hidden', 'true');
+        $('academyBackdrop').classList.remove('open');
     }
 
     openDashboard() {
