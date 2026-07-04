@@ -3088,3 +3088,12 @@ html.dark .academy-drill-btn:hover { color: #05130c; }
 @media (max-width: 900px) {
     .you-layout { grid-template-columns: 1fr; }
 }
+
+/* The Path/Stats/History/Theme/Shortcuts/Settings all live in the sidebar
+   and the You page now — this row is redundant duplicate nav on desktop
+   and was leaving a dead gap in the header. Keep it on mobile, where
+   there's no sidebar to fall back on. Placed at end of file so it wins
+   over the unconditional .header-actions rule earlier in the cascade. */
+@media (min-width: 1000px) {
+    .header-actions { display: none; }
+}
