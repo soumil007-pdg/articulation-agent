@@ -633,10 +633,17 @@ class DailyPractice {
     static renderStats() {
         const streakEl = $('streakCount');
         const weekEl = $('weekCount');
-        if (streakEl) streakEl.textContent = DailyPractice.computeStreak();
+        const streak = DailyPractice.computeStreak();
+        if (streakEl) streakEl.textContent = streak;
         if (weekEl) weekEl.textContent = DailyPractice.sessionsThisWeek();
         const chip = $('streakChip');
-        if (chip) chip.classList.toggle('streak-hot', DailyPractice.computeStreak() >= 3);
+        if (chip) chip.classList.toggle('streak-hot', streak >= 3);
+
+        // Peitho goes sleepy when there's a streak worth protecting and today
+        // hasn't been practiced yet — a nudge, not just decoration.
+        const practicedToday = DailyPractice.practiceDays().has(new Date().toLocaleDateString('en-CA'));
+        const mascot = $('streakChip')?.querySelector('.streak-mascot');
+        if (mascot) mascot.classList.toggle('mascot-sleepy', streak >= 1 && !practicedToday);
     }
 }
 

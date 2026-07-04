@@ -2392,7 +2392,15 @@ html.anim-ready .daily-card:nth-child(2) { transition-delay: .08s; }
 }
 .celebration-overlay.open .celebration-card { transform: translateY(0) scale(1); }
 
-.celebration-laurel { width: 190px; height: auto; margin-bottom: -1.25rem; }
+.celebration-mascot { width: 128px; height: 128px; margin-bottom: -0.5rem; animation: mascotBob 2.4s ease-in-out infinite; }
+
+@keyframes mascotBob {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-6px); }
+}
+
+.streak-mascot { width: 32px; height: 32px; flex-shrink: 0; transition: opacity .3s, filter .3s; }
+.streak-mascot.mascot-sleepy { opacity: .55; filter: grayscale(.35); }
 
 .celebration-eyebrow {
     font-size: .72rem;

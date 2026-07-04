@@ -143,23 +143,18 @@
     <div class="celebration-overlay" id="celebrationOverlay" aria-hidden="true">
         <div class="celebration-particles" id="celebrationParticles" aria-hidden="true"></div>
         <div class="celebration-card">
-            <svg class="celebration-laurel" viewBox="0 0 220 120" aria-hidden="true">
-                <g fill="none" stroke="#e5b04c" stroke-width="3" stroke-linecap="round">
-                    <path d="M78 108 C 44 96, 24 66, 26 28"/>
-                    <path d="M142 108 C 176 96, 196 66, 194 28"/>
-                </g>
-                <g fill="#e5b04c">
-                    <ellipse cx="30" cy="30" rx="5" ry="11" transform="rotate(-38 30 30)"/>
-                    <ellipse cx="30" cy="52" rx="5" ry="11" transform="rotate(-58 30 52)"/>
-                    <ellipse cx="38" cy="73" rx="5" ry="11" transform="rotate(-72 38 73)"/>
-                    <ellipse cx="53" cy="91" rx="5" ry="11" transform="rotate(-84 53 91)"/>
-                    <ellipse cx="72" cy="103" rx="5" ry="11" transform="rotate(-96 72 103)"/>
-                    <ellipse cx="190" cy="30" rx="5" ry="11" transform="rotate(38 190 30)"/>
-                    <ellipse cx="190" cy="52" rx="5" ry="11" transform="rotate(58 190 52)"/>
-                    <ellipse cx="182" cy="73" rx="5" ry="11" transform="rotate(72 182 73)"/>
-                    <ellipse cx="167" cy="91" rx="5" ry="11" transform="rotate(84 167 91)"/>
-                    <ellipse cx="148" cy="103" rx="5" ry="11" transform="rotate(96 148 103)"/>
-                </g>
+            <svg class="celebration-mascot" id="celebrationMascot" viewBox="0 0 120 120" fill="none" aria-hidden="true">
+                <ellipse cx="60" cy="112" rx="22" ry="4" fill="#3A342C" opacity=".08"></ellipse>
+                <circle cx="60" cy="76" r="33" fill="#F5D276" opacity=".25"></circle>
+                <circle cx="60" cy="76" r="25" fill="#F8CDBB" stroke="#3A342C" stroke-width="3"></circle>
+                <path d="M37 66 q-9 -7 -10 -17 M84 66 q9 -7 10 -17" stroke="#3A342C" stroke-width="3" stroke-linecap="round"></path>
+                <path d="M47 71 q4 -5 8 0 M65 71 q4 -5 8 0" stroke="#3A342C" stroke-width="2.5" stroke-linecap="round" fill="none"></path>
+                <circle cx="45" cy="82" r="3.4" fill="#E8938A" opacity=".55"></circle><circle cx="76" cy="82" r="3.4" fill="#E8938A" opacity=".55"></circle>
+                <path d="M52 82 q9 8 17 0" stroke="#3A342C" stroke-width="2.5" stroke-linecap="round" fill="none"></path>
+                <path d="M26 34 q34 -20 68 0" stroke="#D9A441" stroke-width="2.2" stroke-dasharray="4 5" stroke-linecap="round" fill="none"></path>
+                <circle cx="60" cy="24" r="2.4" fill="#D9A441"></circle><circle cx="38" cy="29" r="2" fill="#D9A441"></circle><circle cx="82" cy="29" r="2" fill="#D9A441"></circle>
+                <path d="M20 52 l3 -5 3 5" stroke="#D9A441" stroke-width="2" stroke-linecap="round"></path>
+                <path d="M96 56 l2.5 -4 2.5 4" stroke="#D9A441" stroke-width="2" stroke-linecap="round"></path>
             </svg>
             <p class="celebration-eyebrow">Session complete</p>
             <div class="celebration-score"><span id="celebrationScore">0.0</span><small>/ 10</small></div>
@@ -221,7 +216,17 @@
                 <h2><i class="fa-solid fa-fire"></i> Daily Training</h2>
                 <div class="streak-chips">
                     <div class="streak-chip" id="streakChip" title="Consecutive days practiced">
-                        <i class="fa-solid fa-fire"></i> <strong id="streakCount">0</strong> day streak
+                        <svg class="streak-mascot" viewBox="0 0 120 120" fill="none" aria-hidden="true">
+                            <circle cx="60" cy="78" r="33" fill="#F5D276" opacity=".2"></circle>
+                            <circle cx="60" cy="78" r="25" fill="#F8CDBB" stroke="#3A342C" stroke-width="3"></circle>
+                            <path d="M60 53 q4 -6 0 -11" stroke="#3A342C" stroke-width="2.4" stroke-linecap="round"></path>
+                            <circle cx="60" cy="39" r="2.6" fill="#D9A441"></circle>
+                            <circle cx="52" cy="74" r="4.4" fill="#3A342C"></circle><circle cx="53.6" cy="72.4" r="1.5" fill="#fff"></circle>
+                            <circle cx="69" cy="74" r="4.4" fill="#3A342C"></circle><circle cx="70.6" cy="72.4" r="1.5" fill="#fff"></circle>
+                            <ellipse cx="45" cy="84" rx="3.4" ry="3.4" fill="#E8938A" opacity=".55"></ellipse><ellipse cx="76" cy="84" rx="3.4" ry="3.4" fill="#E8938A" opacity=".55"></ellipse>
+                            <path d="M55 87 q5.5 4 11 0" stroke="#3A342C" stroke-width="2.5" stroke-linecap="round" fill="none"></path>
+                        </svg>
+                        <strong id="streakCount">0</strong> day streak
                     </div>
                     <div class="streak-chip" id="weekChip" title="Sessions in the last 7 days">
                         <i class="fa-solid fa-calendar-week"></i> <strong id="weekCount">0</strong> this week
