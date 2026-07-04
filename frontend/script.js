@@ -233,7 +233,7 @@ class Settings {
     static defaults = {
         defaultContext: 'prep',
         defaultMode: 'text',
-        theme: 'auto',
+        theme: 'light',
     };
 
     static load() {
