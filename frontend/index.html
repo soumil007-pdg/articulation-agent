@@ -174,7 +174,43 @@
     </div>
 
     <!-- ── Main App ── -->
-    <div class="container" id="mainApp" style="display:none;">
+    <div class="app-shell" id="mainApp" style="display:none;">
+
+        <!-- ── Sidebar nav (desktop) ── -->
+        <nav class="app-sidebar" id="appSidebar">
+            <div class="sidebar-brand">
+                <span class="sidebar-logo"><i class="fa-solid fa-comments"></i></span>
+                <span class="sidebar-brand-name">Articulate</span>
+            </div>
+            <button class="sidebar-nav-item active" data-page="home">
+                <i class="fa-solid fa-house"></i> Home
+            </button>
+            <button class="sidebar-nav-item" data-nav-action="path">
+                <i class="fa-solid fa-route"></i> The Path
+            </button>
+            <button class="sidebar-nav-item" data-page="scenarios">
+                <i class="fa-solid fa-table-cells"></i> Scenarios
+            </button>
+            <button class="sidebar-nav-item" data-nav-action="stats">
+                <i class="fa-solid fa-chart-simple"></i> Stats
+            </button>
+            <button class="sidebar-nav-item" data-page="you">
+                <i class="fa-solid fa-user"></i> You
+            </button>
+            <div class="sidebar-mascot-note">
+                <svg viewBox="0 0 120 120" fill="none" aria-hidden="true">
+                    <circle cx="60" cy="72" r="34" fill="#F5D276" opacity=".3"></circle>
+                    <circle cx="60" cy="72" r="26" fill="#F8CDBB" stroke="#3A342C" stroke-width="4"></circle>
+                    <path d="M60 46 q4 -6 0 -11" stroke="#3A342C" stroke-width="3" stroke-linecap="round"></path>
+                    <circle cx="60" cy="32" r="3" fill="#D9A441"></circle>
+                    <circle cx="52" cy="68" r="4.6" fill="#3A342C"></circle><circle cx="69" cy="68" r="4.6" fill="#3A342C"></circle>
+                    <path d="M55 80 q5.5 4 11 0" stroke="#3A342C" stroke-width="3" stroke-linecap="round" fill="none"></path>
+                </svg>
+                <span id="sidebarMascotLine">"day 1 — let's begin"</span>
+            </div>
+        </nav>
+
+        <div class="app-content">
 
         <header class="header">
             <div class="header-top">
@@ -209,6 +245,9 @@
                 <span id="userNameDisplay"></span>
             </div>
         </header>
+
+        <!-- ══ PAGE: Home ══ -->
+        <div class="app-page active" id="pageHome">
 
         <!-- ── Daily Training Hub ── -->
         <section class="daily-hub" id="dailyHub">
@@ -511,7 +550,73 @@
         <footer class="footer">
             <p>Powered by Groq &amp; Whisper · <a href="https://console.groq.com/keys" target="_blank" rel="noopener">Get free Groq key</a></p>
         </footer>
-    </div>
+
+        </div><!-- /#pageHome -->
+
+        <!-- ══ PAGE: Scenarios ══ -->
+        <div class="app-page" id="pageScenarios">
+            <div class="page-heading">
+                <h2>Scenarios</h2>
+                <p>real moments, rehearsed before they're real — each one pre-loads its audience &amp; context</p>
+            </div>
+            <div class="scenario-grid" id="scenarioGrid"></div>
+        </div>
+
+        <!-- ══ PAGE: You ══ -->
+        <div class="app-page" id="pageYou">
+            <div class="page-heading">
+                <h2>You</h2>
+                <p>your profile, your history, your data</p>
+            </div>
+            <div class="you-layout">
+                <div class="you-col">
+                    <div class="you-card">
+                        <h3>Profile</h3>
+                        <label class="you-field">Name
+                            <input type="text" id="youName" />
+                        </label>
+                        <label class="you-field">Email <span class="you-optional">(optional)</span>
+                            <input type="email" id="youEmail" />
+                        </label>
+                        <div class="you-row">
+                            <span>Theme</span>
+                            <div class="you-toggle" id="youThemeToggle">
+                                <button data-value="light">Light</button>
+                                <button data-value="dark">Dark</button>
+                            </div>
+                        </div>
+                        <div class="you-row">
+                            <span>Default mode</span>
+                            <div class="you-toggle" id="youModeToggle">
+                                <button data-value="text">Text</button>
+                                <button data-value="audio">Audio</button>
+                            </div>
+                        </div>
+                        <button class="you-outline-btn" id="youSignOutBtn">Sign out</button>
+                    </div>
+                    <div class="you-card">
+                        <h3>About &amp; data</h3>
+                        <div class="you-row"><span>Backend</span><span id="youBackendStatus" class="you-status">checking…</span></div>
+                        <div class="you-row"><span>Keyboard shortcuts</span><kbd>⌘K to view</kbd></div>
+                        <div class="you-row"><span>API key</span><a href="https://console.groq.com/keys" target="_blank" rel="noopener">get a free Groq key →</a></div>
+                        <hr />
+                        <button class="you-danger-btn" id="youResetBtn">Reset everything…</button>
+                    </div>
+                </div>
+                <div class="you-col you-history-col">
+                    <div class="you-card you-history-card">
+                        <div class="you-history-head">
+                            <h3>History</h3>
+                            <span id="youHistoryCount">0 sessions</span>
+                        </div>
+                        <div class="you-history-list" id="youHistoryList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        </div><!-- /.app-content -->
+    </div><!-- /.app-shell -->
 
     <!-- ── History Drawer ── -->
     <div class="drawer-backdrop" id="historyBackdrop"></div>

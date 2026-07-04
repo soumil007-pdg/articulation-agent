@@ -1097,7 +1097,7 @@ class ArticulateCoach {
     }
 
     showApp(name) {
-        $('mainApp').style.display = 'block';
+        $('mainApp').style.display = 'flex';
         $('userNameDisplay').textContent = name;
     }
 
@@ -1174,6 +1174,12 @@ class ArticulateCoach {
             if (statusEl) {
                 statusEl.innerHTML = `Express: ${h.express} · Python: ${h.python} · Groq: ${h.groq}`;
             }
+            const youStatusEl = $('youBackendStatus');
+            if (youStatusEl) {
+                const ok = h.groq === 'configured' && h.express === 'ok';
+                youStatusEl.textContent = ok ? 'Groq connected' : 'Check settings';
+                youStatusEl.classList.toggle('down', !ok);
+            }
             if (h.groq === 'no-key') {
                 Toast.warning(
                     'Add your free Groq API key to api.env to enable text coaching. Get one at console.groq.com/keys.',
@@ -1217,6 +1223,16 @@ class ArticulateCoach {
         $$('.audience-btn').forEach(btn => {
             btn.addEventListener('click', (e) => this.setAudience(e.currentTarget.dataset.audience));
         });
+
+        // Sidebar navigation
+        $$('.sidebar-nav-item').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (btn.dataset.page) this.switchPage(btn.dataset.page);
+                else if (btn.dataset.navAction === 'path') this.openAcademy();
+                else if (btn.dataset.navAction === 'stats') this.openDashboard();
+            });
+        });
+        this.renderScenarios();
 
         // Daily challenge
         $('useChallengeBtn').addEventListener('click', () => this.useDailyChallenge());
@@ -1272,6 +1288,29 @@ class ArticulateCoach {
             if (confirm('Sign out and clear your profile?')) this.signOut();
         });
         $('clearAllDataBtn').addEventListener('click', () => {
+            if (confirm('Wipe ALL data (profile, history, settings)? Cannot be undone.')) {
+                localStorage.clear();
+                location.reload();
+            }
+        });
+
+        // You page controls (mirrors the settings modal's logic, inline)
+        $('youName').addEventListener('change', (e) => this.updateProfile({ name: e.target.value }));
+        $('youEmail').addEventListener('change', (e) => this.updateProfile({ email: e.target.value }));
+        $$('#youThemeToggle button').forEach(btn => btn.addEventListener('click', () => {
+            const theme = btn.dataset.value;
+            Settings.save({ theme });
+            Settings.applyTheme(theme);
+            $$('#youThemeToggle button').forEach(b => b.classList.toggle('active', b === btn));
+        }));
+        $$('#youModeToggle button').forEach(btn => btn.addEventListener('click', () => {
+            Settings.save({ defaultMode: btn.dataset.value });
+            $$('#youModeToggle button').forEach(b => b.classList.toggle('active', b === btn));
+        }));
+        $('youSignOutBtn').addEventListener('click', () => {
+            if (confirm('Sign out and clear your profile?')) this.signOut();
+        });
+        $('youResetBtn').addEventListener('click', () => {
             if (confirm('Wipe ALL data (profile, history, settings)? Cannot be undone.')) {
                 localStorage.clear();
                 location.reload();
@@ -1353,6 +1392,107 @@ class ArticulateCoach {
         $('practicePrompt').scrollIntoView({ behavior: 'smooth', block: 'center' });
         if (this.currentMode === 'text') $('userInput').focus();
         Toast.info(`Focus on: ${focus.name}`, "Today's drill");
+    }
+
+    // ── Sidebar page navigation ─────────────────────────────────────────────
+    switchPage(pageName) {
+        $$('.app-page').forEach(p => p.classList.toggle('active', p.id === `page${pageName[0].toUpperCase()}${pageName.slice(1)}`));
+        $$('.sidebar-nav-item[data-page]').forEach(b => b.classList.toggle('active', b.dataset.page === pageName));
+        if (pageName === 'you') this.renderYouPage();
+        window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+
+    // ── Scenarios ────────────────────────────────────────────────────────────
+    static SCENARIOS = [
+        { key: 'toast', name: 'The Toast', duration: '1 min', desc: "a friend's wedding, keep it under 90 seconds",
+          prompt: "You're giving a wedding toast for a close friend. Keep it under 90 seconds.",
+          icon: 'fa-champagne-glasses', context: '5ws', audience: 'friends' },
+        { key: 'tough-question', name: 'The Tough Question', duration: '2 min', desc: 'deflect gracefully, land your point',
+          prompt: "A reporter or colleague just asked you a tough, pointed question in front of others. Answer it directly without being defensive.",
+          icon: 'fa-circle-question', context: 'star', audience: 'public' },
+        { key: 'elevator-pitch', name: 'The Elevator Pitch', duration: '30 s', desc: 'one stranger, thirty floors, go',
+          prompt: "You have thirty seconds in an elevator to explain what you do to someone who could fund or hire you.",
+          icon: 'fa-bolt', context: 'logos', audience: 'executives', featured: true },
+        { key: 'apology', name: 'The Apology', duration: '1 min', desc: 'one person, no excuses, no hedging',
+          prompt: "You need to apologize to someone you let down. No excuses, no hedging — just own it and repair it.",
+          icon: 'fa-heart-crack', context: '5ws', audience: 'friends' },
+        { key: 'ask-raise', name: 'The Ask for a Raise', duration: '3 min', desc: 'your boss, your case, zero "I think maybe"',
+          prompt: "You're asking your manager for a raise. Make your case with concrete evidence — no hedging language.",
+          icon: 'fa-scale-balanced', context: 'prep', audience: 'executives' },
+    ];
+
+    renderScenarios() {
+        const grid = $('scenarioGrid');
+        if (!grid) return;
+        grid.innerHTML = '';
+        ArticulateCoach.SCENARIOS.forEach(sc => {
+            const card = document.createElement('button');
+            card.className = 'scenario-card' + (sc.featured ? ' featured' : '');
+            card.innerHTML = `
+                <span class="scenario-icon"><i class="fa-solid ${sc.icon}"></i></span>
+                <span class="scenario-body">
+                    <span class="scenario-title-row"><strong>${sc.name}</strong><span class="scenario-duration">${sc.duration}</span></span>
+                    <span class="scenario-desc">${sc.desc}</span>
+                    <span class="scenario-cta">Practice →</span>
+                </span>`;
+            card.addEventListener('click', () => this.useScenario(sc.key));
+            grid.appendChild(card);
+        });
+        const more = document.createElement('div');
+        more.className = 'scenario-card more';
+        more.innerHTML = `<span>more scenarios as you level up —<br>the Path unlocks them as you go</span>`;
+        grid.appendChild(more);
+    }
+
+    useScenario(key) {
+        const sc = ArticulateCoach.SCENARIOS.find(s => s.key === key);
+        if (!sc) return;
+        this.currentTopic = `scenario:${key}`;
+        this.setContext(sc.context);
+        this.setAudience(sc.audience);
+        this.switchPage('home');
+        $('practicePrompt').textContent = `Scenario — ${sc.name}: ${sc.prompt}`;
+        $('practicePrompt').style.display = 'block';
+        $('userInput').value = '';
+        setTimeout(() => {
+            $('practicePrompt').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (this.currentMode === 'text') $('userInput').focus();
+        }, 50);
+        Toast.info(`Loaded: ${sc.name}`, 'Scenario ready');
+    }
+
+    // ── You page ─────────────────────────────────────────────────────────────
+    renderYouPage() {
+        const user = this.loadUser() || { name: '', email: '' };
+        const settings = Settings.load();
+        $('youName').value = user.name || '';
+        $('youEmail').value = user.email || '';
+
+        $$('#youThemeToggle button').forEach(b => b.classList.toggle('active', b.dataset.value === (settings.theme === 'dark' ? 'dark' : 'light')));
+        $$('#youModeToggle button').forEach(b => b.classList.toggle('active', b.dataset.value === settings.defaultMode));
+
+        const sessions = SessionHistory.load();
+        $('youHistoryCount').textContent = `${sessions.length} session${sessions.length === 1 ? '' : 's'}`;
+        const list = $('youHistoryList');
+        list.innerHTML = '';
+        if (!sessions.length) {
+            list.innerHTML = `<p style="font-family:var(--font-hand);color:var(--text-faint);text-align:center;padding:2rem 0;">No sessions yet — your history will show up here.</p>`;
+            return;
+        }
+        sessions.slice(0, 8).forEach(s => {
+            const preview = (s.input?.text || s.input?.transcript || '').slice(0, 60);
+            const when = new Date(s.timestamp).toLocaleDateString();
+            const item = document.createElement('div');
+            item.className = 'you-history-item';
+            item.innerHTML = `
+                <span class="you-history-score">${Math.round(s.overallScore ?? 0)}</span>
+                <span class="you-history-info">
+                    <strong>${(s.topic || s.context || 'Session').replace(/^scenario:/, '')}</strong>
+                    <small>${when} · ${s.mode} · "${preview}${preview.length === 60 ? '…' : ''}"</small>
+                </span>`;
+            item.addEventListener('click', () => { this.loadSession(s.id); this.switchPage('home'); });
+            list.appendChild(item);
+        });
     }
 
     // ── Practice Prompts ───────────────────────────────────────────────────
