@@ -202,7 +202,7 @@ app.listen(PORT, () => {
     console.log(`📡 AI service URL    : ${AI_SERVICE_URL}`);
     console.log(`🧠 Groq model        : ${GROQ_MODEL}`);
     if (GROQ_API_KEY) {
-        console.log(`🔑 Groq API key      : set (${GROQ_API_KEY.slice(0, 7)}…)`);
+        console.log('🔑 Groq API key      : set');
     } else {
         console.log('⚠️  Groq API key      : NOT SET');
         console.log('   ↳ Get a free key at https://console.groq.com/keys');
