@@ -3,15 +3,27 @@
   "configurations": [
     {
       "name": "Express Backend",
-      "runtimeExecutable": "node",
+      "runtimeExecutable": "/usr/local/bin/node",
       "runtimeArgs": ["server.js"],
       "port": 8000
     },
     {
       "name": "Python AI Service",
-      "runtimeExecutable": "./ai-service/venv/bin/python",
-      "runtimeArgs": ["ai-service/main.py"],
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["ai-service/run-with-path.sh"],
       "port": 8001
+    },
+    {
+      "name": "Docs Preview",
+      "runtimeExecutable": "/usr/local/bin/python3",
+      "runtimeArgs": ["-m", "http.server", "8080", "--directory", "docs"],
+      "port": 8080
+    },
+    {
+      "name": "Frontend (Lovable)",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["frontend/dev-with-path.sh"],
+      "port": 3000
     }
   ]
 }

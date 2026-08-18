@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mascot Family — Redesigned Silhouettes</title>
+<style>
+  body { margin:0; background:#FBF7EF; font-family: -apple-system, sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh; }
+</style>
+</head>
+<body>
+<svg viewBox="0 0 680 460" width="680" height="460" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .label{font-family:'Baloo 2','Fredoka',sans-serif;font-weight:700;fill:#2b2b2b;}
+    .sub{font-family:'Kalam','Patrick Hand',cursive;fill:#6b6b6b;}
+  </style>
+
+  <rect x="0" y="0" width="680" height="460" fill="#FBF7EF"/>
+  <line x1="20" y1="380" x2="660" y2="380" stroke="#E4DCC8" stroke-width="2" stroke-dasharray="6 8"/>
+
+  <!-- ===================== PEITHO — flame/teardrop silhouette ===================== -->
+  <g transform="translate(115,235)">
+    <ellipse cx="0" cy="148" rx="58" ry="10" fill="#E8834A" opacity="0.15"/>
+
+    <!-- golden thread trail -->
+    <path d="M -70,60 C -110,40 -125,0 -95,-30" fill="none" stroke="#D9A441" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+    <circle cx="-95" cy="-30" r="4" fill="#D9A441"/>
+    <circle cx="-80" cy="10" r="3" fill="#D9A441" opacity="0.7"/>
+
+    <!-- flame/teardrop body: pointed crown, rounded base -->
+    <defs>
+      <linearGradient id="peithoGrad" x1="0" y1="-130" x2="0" y2="120" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#FCC26B"/>
+        <stop offset="1" stop-color="#E8834A"/>
+      </linearGradient>
+    </defs>
+    <path d="M 0,-130
+             C -46,-90 -68,-30 -64,25
+             C -60,80 -34,118 0,120
+             C 34,118 60,80 64,25
+             C 68,-30 46,-90 0,-130 Z"
+          fill="url(#peithoGrad)"/>
+
+    <!-- inner flame lick (lighter core) -->
+    <path d="M 0,-92 C -18,-64 -26,-30 -22,4 C -18,32 -8,50 0,52 C 8,50 18,32 22,4 C 26,-30 18,-64 0,-92 Z"
+          fill="#FDE0AE" opacity="0.55"/>
+
+    <!-- cheeks -->
+    <ellipse cx="-34" cy="38" rx="12" ry="8" fill="#E8834A" opacity="0.45"/>
+    <ellipse cx="34" cy="38" rx="12" ry="8" fill="#E8834A" opacity="0.45"/>
+
+    <!-- big warm eyes -->
+    <circle cx="-19" cy="14" r="11" fill="#2b2b2b"/>
+    <circle cx="19" cy="14" r="11" fill="#2b2b2b"/>
+    <circle cx="-16" cy="10" r="3.4" fill="#fff"/>
+    <circle cx="22" cy="10" r="3.4" fill="#fff"/>
+
+    <!-- smile -->
+    <path d="M -12,34 Q 0,44 12,34" fill="none" stroke="#2b2b2b" stroke-width="3.5" stroke-linecap="round"/>
+
+    <!-- little arms -->
+    <path d="M -60,20 Q -78,10 -74,-6" fill="none" stroke="#E8834A" stroke-width="10" stroke-linecap="round"/>
+    <path d="M 60,20 Q 78,10 74,-6" fill="none" stroke="#E8834A" stroke-width="10" stroke-linecap="round"/>
+  </g>
+  <text x="115" y="405" text-anchor="middle" class="label" font-size="24">Peitho</text>
+  <text x="115" y="428" text-anchor="middle" class="sub" font-size="15">flame / thread — warmth &amp; persuasion</text>
+
+  <!-- ===================== CALLIOPE — songbird silhouette ===================== -->
+  <g transform="translate(340,245)">
+    <ellipse cx="0" cy="130" rx="60" ry="10" fill="#2BA89A" opacity="0.15"/>
+
+    <!-- fanned tail feathers, behind body -->
+    <g>
+      <path d="M 30,10 C 70,0 100,-10 118,-34 C 110,-2 108,24 96,46 Z" fill="#7A5FB0"/>
+      <path d="M 34,26 C 76,28 110,26 132,10 C 116,38 104,60 84,72 Z" fill="#8E76C4"/>
+      <path d="M 30,42 C 68,54 96,66 108,88 C 84,80 62,76 44,64 Z" fill="#7A5FB0"/>
+    </g>
+
+    <!-- egg-shaped bird body -->
+    <path d="M 0,-108
+             C 40,-104 60,-60 58,-8
+             C 56,44 34,88 0,96
+             C -34,88 -56,44 -58,-8
+             C -60,-60 -40,-104 0,-108 Z"
+          fill="#2BA89A"/>
+
+    <!-- crest feathers on head -->
+    <path d="M -8,-104 C -14,-124 -4,-134 6,-130 C 2,-118 0,-108 -8,-104Z" fill="#2BA89A"/>
+    <path d="M 6,-108 C 8,-130 22,-136 30,-128 C 20,-118 14,-110 6,-108Z" fill="#3BC0AE"/>
+
+    <!-- wing -->
+    <path d="M -50,-10 C -78,0 -86,30 -68,52 C -58,26 -50,8 -40,-6 Z" fill="#22897D"/>
+
+    <!-- beak -->
+    <path d="M 44,-56 L 68,-50 L 44,-42 Z" fill="#D9A441"/>
+
+    <!-- cheek -->
+    <ellipse cx="18" cy="-42" rx="10" ry="7" fill="#E8834A" opacity="0.4"/>
+
+    <!-- big eye -->
+    <circle cx="20" cy="-58" r="10" fill="#2b2b2b"/>
+    <circle cx="23" cy="-62" r="3" fill="#fff"/>
+
+    <!-- little music-note accent -->
+    <text x="70" y="-70" font-size="22" fill="#D9A441" font-family="Baloo 2, sans-serif">♪</text>
+
+    <!-- feet -->
+    <path d="M -10,94 L -14,110 M -10,94 L -4,110" stroke="#D9A441" stroke-width="4" stroke-linecap="round"/>
+    <path d="M 10,94 L 6,110 M 10,94 L 16,110" stroke="#D9A441" stroke-width="4" stroke-linecap="round"/>
+  </g>
+  <text x="345" y="405" text-anchor="middle" class="label" font-size="24">Calliope</text>
+  <text x="345" y="428" text-anchor="middle" class="sub" font-size="15">songbird / fan-tail — story &amp; craft</text>
+
+  <!-- ===================== HERMES — dart/comet silhouette ===================== -->
+  <g transform="translate(565,235)">
+    <ellipse cx="0" cy="130" rx="55" ry="9" fill="#4A72B8" opacity="0.15"/>
+
+    <!-- speed lines -->
+    <path d="M -95,-40 L -55,-32" stroke="#9FB6E0" stroke-width="4" stroke-linecap="round"/>
+    <path d="M -100,-10 L -58,-6" stroke="#9FB6E0" stroke-width="4" stroke-linecap="round"/>
+    <path d="M -92,20 L -54,18" stroke="#9FB6E0" stroke-width="4" stroke-linecap="round"/>
+
+    <!-- winged dart/comet body: tapered nose forward (left), fins trailing back (right) -->
+    <path d="M -70,0
+             C -50,-46 -4,-70 40,-56
+             C 74,-46 90,-14 74,18
+             C 56,50 10,60 -20,44
+             C -46,30 -60,16 -70,0 Z"
+          fill="#4A72B8"/>
+
+    <!-- tail fins -->
+    <path d="M 46,-50 C 84,-64 112,-56 122,-34 C 96,-38 70,-38 46,-28 Z" fill="#37548F"/>
+    <path d="M 52,30 C 88,40 114,36 128,16 C 100,14 74,18 50,10 Z" fill="#37548F"/>
+
+    <!-- small wing on top -->
+    <path d="M -6,-52 C 4,-84 34,-96 54,-84 C 38,-70 20,-58 -6,-52 Z" fill="#6E8FCE"/>
+
+    <!-- cheek -->
+    <ellipse cx="-30" cy="14" rx="9" ry="6" fill="#E8834A" opacity="0.4"/>
+
+    <!-- big alert eye -->
+    <circle cx="-28" cy="-4" r="10" fill="#2b2b2b"/>
+    <circle cx="-25" cy="-8" r="3" fill="#fff"/>
+
+    <!-- smile -->
+    <path d="M -40,16 Q -28,24 -16,18" fill="none" stroke="#2b2b2b" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  <text x="565" y="405" text-anchor="middle" class="label" font-size="24">Hermes</text>
+  <text x="565" y="428" text-anchor="middle" class="sub" font-size="15">dart / comet — speed &amp; reflex</text>
+</svg>
+</body>
+</html>

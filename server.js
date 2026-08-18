@@ -23,7 +23,8 @@ app.use(cors(ALLOWED_ORIGINS.length
     : {}));
 
 app.use(express.json({ limit: '5mb' }));
-app.use(express.static('frontend'));
+// frontend/ is now a standalone TanStack Start app (its own Vite dev server) —
+// Express no longer serves it as static files, it's a pure API backend.
 
 // Multer: store audio in memory (max 100MB for 5-min audio)
 const upload = multer({

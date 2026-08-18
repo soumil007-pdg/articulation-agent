@@ -1,0 +1,1502 @@
+@import "./assets/fonts.css";
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Articulate AI design system — two registers.
+ * Doodle mode: light, hand-drawn, instructional (default chrome).
+ * Hero mode: dark, painterly, grain-textured (onboarding + celebration).
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* brand chrome — emerald + gold, never used for rhetoric families */
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-gold: var(--gold);
+  --color-gold-foreground: var(--gold-foreground);
+
+  /* fixed rhetoric-family taxonomy — never used for brand chrome */
+  --color-fam-repetition: var(--fam-repetition);
+  --color-fam-structure: var(--fam-structure);
+  --color-fam-drama: var(--fam-drama);
+  --color-fam-principles: var(--fam-principles);
+
+  /* doodle paper tints */
+  --color-mint: var(--mint);
+  --color-cream: var(--cream);
+  --color-peach: var(--peach);
+  --color-sky: var(--sky);
+
+  --font-display: "Baloo 2", "Fredoka", system-ui, sans-serif;
+  --font-hand: "Kalam", "Patrick Hand", cursive;
+  --font-serif-soft: "Fraunces", Georgia, serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+:root {
+  /* Fabulous-style night environment: deep indigo sky, warm ember accents */
+  --radius: 1.25rem;
+  --background: oklch(0.19 0.05 285);
+  --foreground: oklch(0.97 0.015 90);
+  --card: oklch(0.26 0.055 285);
+  --card-foreground: oklch(0.97 0.015 90);
+  --popover: oklch(0.24 0.055 285);
+  --popover-foreground: oklch(0.97 0.015 90);
+  --primary: oklch(0.75 0.16 58); /* warm ember */
+  --primary-foreground: oklch(0.2 0.05 40);
+  --secondary: oklch(0.32 0.06 288);
+  --secondary-foreground: oklch(0.96 0.015 90);
+  --muted: oklch(0.3 0.055 288);
+  --muted-foreground: oklch(0.79 0.03 285);
+  --accent: oklch(0.38 0.09 320);
+  --accent-foreground: oklch(0.97 0.015 90);
+  --destructive: oklch(0.63 0.19 25);
+  --destructive-foreground: oklch(0.98 0.01 90);
+  --border: oklch(0.98 0.02 90 / 16%);
+  --input: oklch(0.98 0.02 90 / 20%);
+  --ring: oklch(0.75 0.16 58);
+  --chart-1: oklch(0.75 0.16 58);
+  --chart-2: oklch(0.8 0.13 88);
+  --chart-3: oklch(0.68 0.13 300);
+  --chart-4: oklch(0.72 0.13 200);
+  --chart-5: oklch(0.7 0.14 20);
+  --sidebar: oklch(0.22 0.055 288);
+  --sidebar-foreground: oklch(0.96 0.015 90);
+  --sidebar-primary: oklch(0.75 0.16 58);
+  --sidebar-primary-foreground: oklch(0.2 0.05 40);
+  --sidebar-accent: oklch(0.31 0.06 290);
+  --sidebar-accent-foreground: oklch(0.97 0.015 90);
+  --sidebar-border: oklch(0.98 0.02 90 / 12%);
+  --sidebar-ring: oklch(0.75 0.16 58);
+
+  --brand: oklch(0.72 0.13 165); /* softened emerald for dark ground */
+  --brand-foreground: oklch(0.2 0.04 165);
+  --gold: oklch(0.82 0.13 82);
+  --gold-foreground: oklch(0.24 0.05 60);
+
+  --fam-repetition: oklch(0.75 0.15 51);
+  --fam-structure: oklch(0.68 0.13 262);
+  --fam-drama: oklch(0.74 0.11 181);
+  --fam-principles: oklch(0.7 0.16 22);
+
+  --mint: oklch(0.3 0.06 190);
+  --cream: oklch(0.34 0.06 70);
+  --peach: oklch(0.35 0.08 40);
+  --sky: oklch(0.3 0.07 290);
+
+  --gradient-hero-indigo: linear-gradient(140deg, oklch(0.3 0.14 285), oklch(0.45 0.16 330));
+  --gradient-hero-crimson: linear-gradient(140deg, oklch(0.36 0.16 20), oklch(0.66 0.15 65));
+  --gradient-hero-cobalt: linear-gradient(140deg, oklch(0.3 0.13 275), oklch(0.55 0.13 225));
+  --shadow-doodle: 0 18px 40px -24px oklch(0.06 0.05 285 / 0.95);
+  --shadow-soft: 0 22px 50px -28px oklch(0.06 0.05 285 / 0.95);
+}
+
+.dark {
+  --background: oklch(0.21 0.03 265);
+  --foreground: oklch(0.97 0.01 250);
+  --card: oklch(0.26 0.03 265);
+  --card-foreground: oklch(0.97 0.01 250);
+  --popover: oklch(0.26 0.03 265);
+  --popover-foreground: oklch(0.97 0.01 250);
+  --primary: oklch(0.62 0.11 163);
+  --primary-foreground: oklch(0.18 0.03 165);
+  --secondary: oklch(0.31 0.03 260);
+  --secondary-foreground: oklch(0.96 0.01 250);
+  --muted: oklch(0.31 0.03 260);
+  --muted-foreground: oklch(0.74 0.03 255);
+  --accent: oklch(0.34 0.05 90);
+  --accent-foreground: oklch(0.96 0.02 90);
+  --destructive: oklch(0.66 0.18 25);
+  --destructive-foreground: oklch(0.98 0.01 90);
+  --border: oklch(1 0 0 / 14%);
+  --input: oklch(1 0 0 / 18%);
+  --ring: oklch(0.62 0.11 163);
+  --sidebar: oklch(0.24 0.03 265);
+  --sidebar-foreground: oklch(0.96 0.01 250);
+  --sidebar-primary: oklch(0.62 0.11 163);
+  --sidebar-primary-foreground: oklch(0.18 0.03 165);
+  --sidebar-accent: oklch(0.31 0.03 260);
+  --sidebar-accent-foreground: oklch(0.96 0.01 250);
+  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-ring: oklch(0.62 0.11 163);
+  --mint: oklch(0.3 0.04 165);
+  --cream: oklch(0.3 0.03 92);
+  --peach: oklch(0.32 0.04 55);
+  --sky: oklch(0.3 0.04 240);
+  --brand: oklch(0.62 0.11 163);
+  --gold: oklch(0.8 0.12 79);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-display);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+}
+
+/* ---------- Hero mode ---------- */
+@utility hero-surface {
+  position: relative;
+  isolation: isolate;
+  background-image: var(--gradient-hero-indigo);
+  color: oklch(0.98 0.01 90);
+  overflow: hidden;
+}
+
+@utility hero-crimson {
+  background-image: var(--gradient-hero-crimson);
+}
+
+@utility hero-cobalt {
+  background-image: var(--gradient-hero-cobalt);
+}
+
+/* visible grain over hero gradients */
+.hero-surface::after {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.42;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grain-shift 8s steps(6) infinite;
+}
+
+@keyframes grain-shift {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  20% {
+    transform: translate(-3%, 2%);
+  }
+  40% {
+    transform: translate(2%, -3%);
+  }
+  60% {
+    transform: translate(-2%, -2%);
+  }
+  80% {
+    transform: translate(3%, 1%);
+  }
+}
+
+@utility hero-soft {
+  font-family: var(--font-serif-soft);
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* solid highlighter rectangle behind key phrases */
+@utility highlighter {
+  position: relative;
+  display: inline-block;
+  padding-inline: 0.3em;
+  color: var(--gold-foreground);
+  background-color: var(--gold);
+  transform: rotate(-1.2deg);
+}
+
+@utility highlighter-emerald {
+  position: relative;
+  display: inline-block;
+  padding-inline: 0.3em;
+  color: var(--brand-foreground);
+  background-color: var(--brand);
+  transform: rotate(-1.2deg);
+}
+
+/* ---------- Doodle mode ---------- */
+@utility doodle-card {
+  background-color: color-mix(in oklab, var(--card) 82%, transparent);
+  border: 1.5px solid color-mix(in oklab, var(--foreground) 14%, transparent);
+  border-radius: var(--radius-3xl);
+  box-shadow: var(--shadow-doodle);
+  backdrop-filter: blur(14px);
+}
+
+@utility doodle-soft {
+  background-color: color-mix(in oklab, var(--card) 65%, transparent);
+  border: 1.5px solid color-mix(in oklab, var(--foreground) 10%, transparent);
+  border-radius: var(--radius-3xl);
+  backdrop-filter: blur(10px);
+}
+
+@utility hand {
+  font-family: var(--font-hand);
+}
+
+@utility ui-sans {
+  font-family: var(--font-sans);
+}
+
+@utility dotted-divider {
+  height: 0;
+  border-top: 3px dotted color-mix(in oklab, var(--foreground) 25%, transparent);
+}
+
+@utility sticky-note {
+  background-color: var(--cream);
+  border-radius: 0.35rem;
+  box-shadow: var(--shadow-doodle);
+  transform: rotate(-1.5deg);
+}
+
+@utility paper-mint {
+  background:
+    radial-gradient(70rem 40rem at 8% -8%, oklch(0.42 0.14 320 / 0.55), transparent 62%),
+    radial-gradient(60rem 38rem at 100% 4%, oklch(0.45 0.13 250 / 0.5), transparent 58%),
+    radial-gradient(70rem 45rem at 60% 108%, oklch(0.5 0.14 55 / 0.32), transparent 62%),
+    var(--background);
+  background-attachment: fixed;
+}
+
+@keyframes mascot-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@utility mascot-bob {
+  animation: mascot-bob 3.2s ease-in-out infinite;
+}
+
+@keyframes thread-sway {
+  0%,
+  100% {
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dashoffset: 12;
+  }
+}
+
+/* Mascot art: expression is carried by motion, since the illustrations are fixed poses. */
+@utility mascot-art {
+  filter: drop-shadow(0 6px 10px color-mix(in oklab, var(--foreground) 18%, transparent));
+}
+
+@utility mascot-cheer {
+  animation: mascot-cheer 1.4s ease-in-out infinite;
+}
+
+@keyframes mascot-cheer {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-3deg) scale(1);
+  }
+  50% {
+    transform: translateY(-10px) rotate(3deg) scale(1.05);
+  }
+}
+
+@utility mascot-tilt {
+  transform: rotate(-7deg);
+}
+
+@utility mascot-shrink {
+  transform: scale(0.94);
+  opacity: 0.9;
+}
+
+@utility mascot-lean {
+  transform: rotate(4deg) translateY(-2px);
+}
+
+/* ============================================================
+   Ceremony layer — slow, breathing, staged motion.
+   Everything here is decorative and respects reduced motion.
+   ============================================================ */
+
+/* --- Living gradient: the hero surface drifts instead of sitting still --- */
+@keyframes aurora-drift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+    background-size: 180% 180%;
+  }
+  50% {
+    background-position: 100% 50%;
+    background-size: 220% 220%;
+  }
+}
+
+@utility hero-living {
+  background-size: 180% 180%;
+  animation: aurora-drift 22s ease-in-out infinite;
+}
+
+/* --- Soft light blooms floating over a hero --- */
+@keyframes bloom-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate3d(4%, -6%, 0) scale(1.18);
+    opacity: 0.8;
+  }
+}
+
+@utility bloom {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(60px);
+  pointer-events: none;
+  animation: bloom-float 16s ease-in-out infinite;
+}
+
+/* --- Staged entrance: content arrives one line at a time --- */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@utility rise {
+  opacity: 0;
+  animation: rise-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@utility rise-1 {
+  animation-delay: 0.03s;
+}
+@utility rise-2 {
+  animation-delay: 0.10s;
+}
+@utility rise-3 {
+  animation-delay: 0.18s;
+}
+@utility rise-4 {
+  animation-delay: 0.26s;
+}
+@utility rise-5 {
+  animation-delay: 0.34s;
+}
+
+/* --- Breathing: the signature Fabulous-style calm pulse --- */
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.045);
+  }
+}
+
+@utility breathe {
+  animation: breathe 5.5s ease-in-out infinite;
+}
+
+/* --- Halo rings that expand out of a centred mascot --- */
+@keyframes halo-expand {
+  0% {
+    transform: scale(0.75);
+    opacity: 0.55;
+  }
+  80% {
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+
+@utility halo-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 2px solid currentColor;
+  pointer-events: none;
+  animation: halo-expand 4.5s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+/* --- Celebration burst: rays sweeping behind a win --- */
+@keyframes ray-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@utility sun-rays {
+  position: absolute;
+  inset: -30%;
+  pointer-events: none;
+  opacity: 0.28;
+  background: repeating-conic-gradient(
+    from 0deg,
+    currentColor 0deg 5deg,
+    transparent 5deg 18deg
+  );
+  mask-image: radial-gradient(closest-side, transparent 32%, black 55%, transparent 82%);
+  animation: ray-spin 40s linear infinite;
+}
+
+@keyframes pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.82) translateY(18px);
+  }
+  60% {
+    transform: scale(1.03) translateY(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@utility pop-in {
+  animation: pop-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* --- Progress shimmer for the analysis ritual --- */
+@keyframes shimmer-sweep {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(220%);
+  }
+}
+
+@utility shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    color-mix(in oklab, var(--gold) 45%, transparent) 50%,
+    transparent 80%
+  );
+  animation: shimmer-sweep 2.4s ease-in-out infinite;
+}
+
+/* --- Tactile press for nav + primary actions --- */
+@utility tactile {
+  transition:
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.22s ease,
+    background-color 0.22s ease;
+}
+
+.tactile:hover {
+  transform: translateY(-2px);
+}
+
+.tactile:active {
+  transform: scale(0.95);
+}
+
+/* --- Route change transition --- */
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@utility page-in {
+  animation: page-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-living,
+  .bloom,
+  .breathe,
+  .halo-ring,
+  .sun-rays,
+  .mascot-bob,
+  .mascot-cheer,
+  .shimmer::after,
+  .hero-surface::after {
+    animation: none !important;
+  }
+
+  .rise,
+  .pop-in,
+  .page-in {
+    animation: none !important;
+    opacity: 1;
+  }
+}
+
+/* ============================================================
+   Mascot life: idle breathing, tap reactions, customization
+   ============================================================ */
+@keyframes mascot-idle {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+  35% {
+    transform: scale(1.035) rotate(-1.2deg);
+  }
+  70% {
+    transform: scale(0.985) rotate(1deg);
+  }
+}
+
+@utility mascot-idle {
+  animation: mascot-idle 5.5s ease-in-out infinite;
+  transform-origin: 50% 85%;
+}
+
+@utility mascot-idle-lively {
+  animation-duration: 2.6s;
+}
+
+@keyframes mascot-poke {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    transform: scale(1.12) rotate(-7deg) translateY(-8px);
+  }
+  55% {
+    transform: scale(0.96) rotate(5deg) translateY(2px);
+  }
+  80% {
+    transform: scale(1.04) rotate(-2deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@utility mascot-poke {
+  animation: mascot-poke 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both !important;
+  transform-origin: 50% 85%;
+}
+
+@keyframes mascot-aura {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.94);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.08);
+  }
+}
+
+@utility mascot-aura {
+  animation: mascot-aura 5.5s ease-in-out infinite;
+  filter: blur(10px);
+}
+
+@keyframes mascot-sparkle {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+@utility mascot-sparkles {
+  & path {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: mascot-sparkle 2.4s ease-in-out infinite;
+  }
+}
+
+@keyframes mascot-halo {
+  0%,
+  100% {
+    transform: translate(-50%, 0) scale(1);
+    opacity: 0.75;
+  }
+  50% {
+    transform: translate(-50%, -3px) scale(1.06);
+    opacity: 1;
+  }
+}
+
+@utility mascot-halo {
+  animation: mascot-halo 4s ease-in-out infinite;
+}
+
+@keyframes mascot-quip {
+  0% {
+    opacity: 0;
+    transform: translateY(-40%) scale(0.85);
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+  }
+  85% {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-60%) scale(0.95);
+  }
+}
+
+@utility mascot-quip {
+  animation: mascot-quip 2.2s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mascot-idle,
+  .mascot-poke,
+  .mascot-aura,
+  .mascot-halo,
+  .mascot-sparkles path {
+    animation: none !important;
+  }
+}
+
+/* ============================================================
+   Award layer — display typography, cinematic intro,
+   shared-element route transitions, WebGL sky.
+   ============================================================ */
+
+/* --- Real display typography ------------------------------- */
+:root {
+  --font-editorial: "Instrument Serif", "Fraunces", Georgia, serif;
+  --font-grotesk: "Bricolage Grotesque", "Baloo 2", system-ui, sans-serif;
+}
+
+@utility display-xl {
+  font-family: var(--font-editorial);
+  font-weight: 400;
+  font-size: clamp(3rem, 11vw, 8.5rem);
+  line-height: 0.88;
+  letter-spacing: -0.035em;
+}
+
+@utility display-lg {
+  font-family: var(--font-editorial);
+  font-weight: 400;
+  font-size: clamp(2.25rem, 6vw, 4.5rem);
+  line-height: 0.94;
+  letter-spacing: -0.03em;
+}
+
+@utility display-md {
+  font-family: var(--font-editorial);
+  font-weight: 400;
+  font-size: clamp(1.75rem, 3.6vw, 2.75rem);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+}
+
+@utility eyebrow {
+  font-family: var(--font-grotesk);
+  font-weight: 700;
+  font-size: 0.68rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
+@utility grotesk {
+  font-family: var(--font-grotesk);
+}
+
+/* --- WebGL sky sits under the ambient wash ----------------- */
+.sky-host .paper-mint,
+.paper-mint.sky-host {
+  background: transparent;
+}
+
+/* --- Cinematic intro --------------------------------------- */
+.intro-root {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: radial-gradient(120% 90% at 50% 55%, oklch(0.2 0.06 288), oklch(0.09 0.04 285) 70%);
+  color: oklch(0.98 0.012 90);
+  cursor: pointer;
+  animation: intro-fade-in 400ms ease-out both;
+}
+
+@keyframes intro-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.intro-ink {
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(35rem 24rem at 30% 40%, oklch(0.5 0.16 320 / 0.55), transparent 65%),
+    radial-gradient(32rem 22rem at 72% 62%, oklch(0.55 0.15 55 / 0.42), transparent 62%),
+    radial-gradient(40rem 26rem at 52% 20%, oklch(0.42 0.14 255 / 0.5), transparent 66%);
+  filter: blur(20px);
+  animation: intro-ink-bloom 2.6s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+@keyframes intro-ink-bloom {
+  0% {
+    transform: scale(0.55) rotate(-6deg);
+    opacity: 0;
+  }
+  45% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.12) rotate(4deg);
+    opacity: 0.9;
+  }
+}
+
+.intro-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(80% 70% at 50% 50%, transparent 40%, oklch(0.06 0.03 285 / 0.85));
+}
+
+.intro-mark {
+  overflow: visible;
+}
+
+.intro-constellation path {
+  fill: none;
+  stroke: color-mix(in oklab, var(--gold) 85%, transparent);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 620;
+  stroke-dashoffset: 620;
+  animation: intro-draw 1.1s cubic-bezier(0.65, 0, 0.35, 1) 150ms both;
+}
+
+@keyframes intro-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.intro-star {
+  fill: oklch(0.98 0.02 90);
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: intro-pop 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  filter: drop-shadow(0 0 8px color-mix(in oklab, var(--gold) 70%, transparent));
+}
+
+@keyframes intro-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.5);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.intro-core {
+  fill: color-mix(in oklab, var(--primary) 90%, white);
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: intro-core-flare 1s cubic-bezier(0.16, 1, 0.3, 1) 0.7s both;
+  filter: drop-shadow(0 0 26px color-mix(in oklab, var(--primary) 80%, transparent));
+}
+
+@keyframes intro-core-flare {
+  0% {
+    opacity: 0;
+    transform: scale(0.1);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(1.25);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.intro-word {
+  display: flex;
+  gap: 0.02em;
+}
+
+.intro-word span {
+  display: inline-block;
+  opacity: 0;
+  animation: intro-letter 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes intro-letter {
+  from {
+    opacity: 0;
+    transform: translateY(0.5em) rotate(4deg);
+    filter: blur(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+.intro-tag {
+  font-family: var(--font-serif-soft);
+  font-style: italic;
+  font-size: clamp(0.95rem, 2vw, 1.35rem);
+  letter-spacing: 0.02em;
+  opacity: 0;
+  color: color-mix(in oklab, var(--gold) 75%, white);
+  animation: rise-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) 1.15s both;
+}
+
+.intro-skip {
+  position: absolute;
+  bottom: 2rem;
+  right: 2rem;
+  font-family: var(--font-grotesk);
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  border: 1px solid oklch(0.98 0.02 90 / 0.25);
+  color: oklch(0.98 0.02 90 / 0.75);
+  opacity: 0;
+  animation: intro-fade-in 400ms ease-out 0.5s both;
+}
+
+.intro-skip:hover {
+  color: oklch(0.99 0.02 90);
+  border-color: oklch(0.98 0.02 90 / 0.55);
+}
+
+.intro-curtain {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: oklch(0.09 0.04 285);
+  transform: scaleY(0);
+  pointer-events: none;
+}
+
+.intro-curtain-top {
+  top: 0;
+  transform-origin: top;
+}
+
+.intro-curtain-bottom {
+  bottom: 0;
+  transform-origin: bottom;
+}
+
+.intro-leaving .intro-curtain {
+  animation: curtain-lift 560ms cubic-bezier(0.76, 0, 0.24, 1) both;
+}
+
+@keyframes curtain-lift {
+  0% {
+    transform: scaleY(1);
+  }
+  100% {
+    transform: scaleY(0);
+  }
+}
+
+.intro-leaving {
+  animation: intro-out 560ms cubic-bezier(0.76, 0, 0.24, 1) both;
+}
+
+@keyframes intro-out {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+    clip-path: inset(0 0 0 0);
+  }
+  55% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.08);
+    clip-path: inset(50% 0 50% 0);
+  }
+}
+
+/* --- Shared-element route transitions ---------------------- */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-group(root) {
+  animation-duration: 620ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+::view-transition-old(root) {
+  animation: vt-old 220ms cubic-bezier(0.76, 0, 0.24, 1) both;
+}
+
+::view-transition-new(root) {
+  animation: vt-new 340ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes vt-old {
+  to {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.985);
+    filter: blur(8px);
+  }
+}
+
+@keyframes vt-new {
+  from {
+    opacity: 0;
+    transform: translateY(26px) scale(0.99);
+    filter: blur(10px);
+  }
+}
+
+/* the pieces that morph across routes instead of cross-fading */
+.vt-shell {
+  view-transition-name: shell;
+}
+.vt-nav {
+  view-transition-name: nav;
+}
+.vt-brand {
+  view-transition-name: brand;
+}
+
+::view-transition-group(shell),
+::view-transition-group(nav),
+::view-transition-group(brand) {
+  animation-duration: 620ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+::view-transition-old(nav),
+::view-transition-new(nav),
+::view-transition-old(brand),
+::view-transition-new(brand) {
+  animation: none;
+  mix-blend-mode: normal;
+  height: 100%;
+}
+
+.vt-hero {
+  view-transition-name: hero;
+}
+
+::view-transition-group(hero) {
+  animation-duration: 720ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+  .intro-root {
+    display: none;
+  }
+}
+
+/* --- Mascot starlight: a slow constellation shimmer behind the art --- */
+.mascot-slot {
+  perspective: 700px;
+}
+
+.mascot-starlight {
+  position: absolute;
+  inset: -18%;
+  pointer-events: none;
+  border-radius: 9999px;
+  background:
+    radial-gradient(circle at 50% 55%, color-mix(in oklab, var(--primary) 26%, transparent), transparent 62%),
+    radial-gradient(circle at 30% 30%, color-mix(in oklab, var(--gold) 22%, transparent), transparent 48%);
+  filter: blur(14px);
+  opacity: 0.75;
+  animation: starlight-breathe 7s ease-in-out infinite;
+}
+
+@keyframes starlight-breathe {
+  0%,
+  100% {
+    transform: scale(0.94);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.9;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mascot-starlight {
+    animation: none;
+  }
+}
+
+/* ============================================================
+   Craft layer — cursor, magnetics, brand mark, onboarding stage,
+   scroll-linked path trail, designed 404.
+   ============================================================ */
+
+/* --- Custom cursor ----------------------------------------- */
+.cursor-dot,
+.cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 120;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  will-change: transform;
+}
+
+.cursor-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: oklch(0.92 0.14 75);
+  box-shadow: 0 0 12px oklch(0.8 0.16 60 / 0.9);
+}
+
+.cursor-ring {
+  width: 34px;
+  height: 34px;
+  border-radius: 9999px;
+  border: 1.5px solid oklch(0.9 0.06 80 / 0.55);
+  transition:
+    opacity 0.25s ease,
+    width 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.28s ease,
+    background-color 0.28s ease;
+}
+
+.cursor-ring-active {
+  width: 58px;
+  height: 58px;
+  border-color: oklch(0.86 0.13 70 / 0.85);
+  background: oklch(0.86 0.13 70 / 0.1);
+}
+
+.cursor-ring-press {
+  width: 24px;
+  height: 24px;
+}
+
+html.has-custom-cursor,
+html.has-custom-cursor * {
+  cursor: none !important;
+}
+
+/* --- Magnetic elements ------------------------------------- */
+.magnetic {
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.magnetic:active {
+  transition-duration: 0.12s;
+}
+
+/* --- Brand mark -------------------------------------------- */
+.brand-word {
+  font-family: var(--font-editorial);
+  font-size: 1.6rem;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: oklch(0.98 0.012 90);
+}
+
+.brand-sub {
+  font-family: var(--font-grotesk);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  margin-top: 0.28rem;
+  color: color-mix(in oklab, var(--gold) 78%, transparent);
+}
+
+.brand-glyph {
+  filter: drop-shadow(0 0 10px oklch(0.7 0.15 60 / 0.35));
+}
+
+.brand-orbit {
+  transform-origin: 50% 50%;
+  animation: brand-orbit-spin 14s linear infinite;
+}
+
+@keyframes brand-orbit-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* --- Night stage (onboarding, 404) ------------------------- */
+.night-stage {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  color: oklch(0.98 0.012 90);
+  background:
+    radial-gradient(90rem 55rem at 50% -20%, oklch(0.28 0.08 288 / 0.85), transparent 65%),
+    oklch(0.13 0.04 285);
+  overflow: hidden;
+}
+
+.night-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(115% 85% at 50% 45%, transparent 40%, oklch(0.08 0.03 285 / 0.85));
+}
+
+.scene-wash {
+  position: absolute;
+  inset: -20%;
+  pointer-events: none;
+  opacity: 0.5;
+  filter: blur(80px);
+  background: radial-gradient(45rem 32rem at 72% 30%, var(--scene-tint, oklch(0.6 0.15 300)), transparent 68%);
+  transition: background 1.2s ease;
+}
+
+.onb-frame {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 78rem;
+  margin-inline: auto;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  gap: clamp(1.5rem, 4vh, 3rem);
+}
+
+.onb-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.onb-count {
+  font-variant-numeric: tabular-nums;
+}
+
+.onb-body {
+  flex: 1;
+  display: grid;
+  align-items: center;
+  gap: clamp(1.5rem, 5vw, 4rem);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 900px) {
+  .onb-body {
+    grid-template-columns: 1.35fr 0.65fr;
+  }
+}
+
+.onb-headline {
+  margin-top: 0.6rem;
+  max-width: 15ch;
+  text-wrap: balance;
+}
+
+.onb-accent {
+  font-style: italic;
+  color: transparent;
+  background-image: linear-gradient(
+    100deg,
+    oklch(0.9 0.12 88),
+    oklch(0.78 0.17 55) 55%,
+    oklch(0.72 0.15 330)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.onb-soft {
+  margin-top: clamp(1rem, 2vh, 1.75rem);
+  max-width: 34ch;
+  font-size: clamp(1.05rem, 1.5vw, 1.4rem);
+  color: oklch(0.9 0.02 90 / 0.82);
+}
+
+.onb-figure {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.onb-halo {
+  color: color-mix(in oklab, var(--scene-tint, var(--gold)) 70%, transparent);
+}
+
+.onb-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  border-top: 1px solid oklch(0.98 0.02 90 / 0.14);
+  padding-top: clamp(1rem, 2.5vh, 1.75rem);
+}
+
+.onb-rail {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.onb-tick {
+  height: 2px;
+  width: 2.5rem;
+  border-radius: 9999px;
+  background: oklch(0.98 0.02 90 / 0.2);
+  transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.onb-tick-past {
+  background: oklch(0.98 0.02 90 / 0.45);
+}
+
+.onb-tick-on {
+  width: 5rem;
+  background: var(--gold);
+  box-shadow: 0 0 14px oklch(0.8 0.14 70 / 0.55);
+}
+
+.onb-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.onb-skip {
+  font-family: var(--font-grotesk);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 0.75rem 1rem;
+  border-radius: 9999px;
+  color: oklch(0.95 0.02 90 / 0.62);
+  transition: color 0.25s ease;
+}
+
+.onb-skip:hover {
+  color: oklch(0.98 0.02 90);
+}
+
+.onb-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-grotesk);
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  padding: 0.95rem 1.9rem;
+  border-radius: 9999px;
+  color: var(--gold-foreground);
+  background: linear-gradient(120deg, oklch(0.89 0.12 88), oklch(0.78 0.16 56));
+  box-shadow:
+    0 10px 30px oklch(0.6 0.15 55 / 0.35),
+    inset 0 1px 0 oklch(1 0 0 / 0.4);
+}
+
+/* --- Scroll-linked Path trail ------------------------------ */
+.trail-rail {
+  position: absolute;
+  inset-block: 0;
+  width: 3px;
+  border-radius: 9999px;
+  background: color-mix(in oklab, currentColor 22%, transparent);
+  overflow: hidden;
+}
+
+.trail-rail::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: calc(var(--trail-progress, 0) * 100%);
+  background: linear-gradient(
+    to bottom,
+    color-mix(in oklab, currentColor 90%, transparent),
+    color-mix(in oklab, currentColor 40%, transparent)
+  );
+  box-shadow: 0 0 18px currentColor;
+  transition: height 0.15s linear;
+}
+
+.trail-parallax {
+  transform: translate3d(0, calc(var(--trail-shift, 0) * 1px), 0);
+  will-change: transform;
+}
+
+.trail-comet {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--trail-progress, 0) * 100%);
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  margin-top: -6px;
+  border-radius: 9999px;
+  background: currentColor;
+  box-shadow: 0 0 22px 4px currentColor;
+  opacity: 0.9;
+  pointer-events: none;
+  transition: top 0.15s linear;
+}
+
+/* --- 404 ---------------------------------------------------- */
+.nf-wrap {
+  position: relative;
+  z-index: 1;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 3rem 1.5rem;
+  text-align: center;
+}
+
+.nf-code {
+  font-family: var(--font-editorial);
+  font-size: clamp(6rem, 22vw, 15rem);
+  line-height: 0.82;
+  letter-spacing: -0.04em;
+  color: transparent;
+  background-image: linear-gradient(160deg, oklch(0.95 0.03 90), oklch(0.68 0.16 300) 70%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-orbit,
+  .magnetic,
+  .scene-wash {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+.trail-parallax-rev {
+  transform: translate3d(0, calc(var(--trail-shift, 0) * -1px), 0);
+  will-change: transform;
+}
