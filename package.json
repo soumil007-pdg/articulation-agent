@@ -1,6 +1,6 @@
 {
   "name": "articulate-ai-coach",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Personal communication coach powered by Groq + Whisper",
   "main": "server.js",
   "scripts": {
