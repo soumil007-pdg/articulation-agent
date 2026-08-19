@@ -112,7 +112,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content: "Personal communication coaching: scoring, persuasion analysis, rhetoric drills.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: "https://articulation-agent-ruby.vercel.app/og-image.png" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Articulate AI" },
+      {
+        name: "twitter:description",
+        content: "Personal communication coaching: scoring, persuasion analysis, rhetoric drills.",
+      },
+      { name: "twitter:image", content: "https://articulation-agent-ruby.vercel.app/og-image.png" },
     ],
     links: [
       {
@@ -120,6 +129,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+      { rel: "icon", href: "/icon-192.png", type: "image/png", sizes: "192x192" },
+      { rel: "icon", href: "/icon-512.png", type: "image/png", sizes: "512x512" },
     ],
   }),
   shellComponent: RootShell,
