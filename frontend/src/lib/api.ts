@@ -12,7 +12,7 @@ export function getApiBase(): string {
     const stored = window.localStorage.getItem(OVERRIDE_KEY);
     if (stored && stored.trim()) return stored.trim().replace(/\/$/, "");
   }
-  const envBase = import.meta.env["VITE_API_BASE_URL"] as string | undefined;
+  const envBase = import.meta.env["VITE_API_URL"] as string | undefined;
   return (envBase || DEFAULT_API_BASE).replace(/\/$/, "");
 }
 
