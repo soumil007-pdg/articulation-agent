@@ -21,31 +21,40 @@ print(f"Loading Whisper model ({WHISPER_MODEL})... (first run downloads the mode
 whisper_model = whisper.load_model(WHISPER_MODEL, device=device)
 print("Whisper model loaded.")
 
-# SpeechBrain emotion classifier (audio-based, 4 classes — optional)
+# SpeechBrain emotion classifier (audio-based, 4 classes — optional, memory-heavy).
+# Disabled by default so the service fits in constrained hosting (e.g. 512MB).
+# Set ENABLE_EMOTION_MODEL=1 to turn it on.
 emotion_model = None
-try:
-    emotion_model = EncoderClassifier.from_hparams(
-        source="speechbrain/emotion-recognition-wav2vec2-IEMOCAP",
-        savedir="pretrained_models/emotion"
-    )
-    print("SpeechBrain emotion model loaded.")
-except Exception as e:
-    print(f"Warning: SpeechBrain emotion model not loaded ({e}). Audio emotion detection disabled.")
+if os.environ.get("ENABLE_EMOTION_MODEL") == "1":
+    try:
+        emotion_model = EncoderClassifier.from_hparams(
+            source="speechbrain/emotion-recognition-wav2vec2-IEMOCAP",
+            savedir="pretrained_models/emotion"
+        )
+        print("SpeechBrain emotion model loaded.")
+    except Exception as e:
+        print(f"Warning: SpeechBrain emotion model not loaded ({e}). Audio emotion detection disabled.")
+else:
+    print("SpeechBrain emotion model disabled (set ENABLE_EMOTION_MODEL=1 to enable).")
 
-# GoEmotion text classifier (28 emotions from word choices — optional)
+# GoEmotion text classifier (28 emotions from word choices — optional, memory-heavy).
+# Disabled by default; set ENABLE_GOEMOTIONS=1 to turn it on.
 goemotions_model = None
-try:
-    from transformers import pipeline as hf_pipeline
-    print("Loading GoEmotion model (monologg/bert-base-cased-goemotions-original)...")
-    print("  Note: First run downloads ~400MB — cached after that.")
-    goemotions_model = hf_pipeline(
-        "text-classification",
-        model="monologg/bert-base-cased-goemotions-original",
-        top_k=3,
-    )
-    print("GoEmotion model loaded.")
-except Exception as e:
-    print(f"Warning: GoEmotion model not loaded ({e}). Text emotion detection disabled.")
+if os.environ.get("ENABLE_GOEMOTIONS") == "1":
+    try:
+        from transformers import pipeline as hf_pipeline
+        print("Loading GoEmotion model (monologg/bert-base-cased-goemotions-original)...")
+        print("  Note: First run downloads ~400MB — cached after that.")
+        goemotions_model = hf_pipeline(
+            "text-classification",
+            model="monologg/bert-base-cased-goemotions-original",
+            top_k=3,
+        )
+        print("GoEmotion model loaded.")
+    except Exception as e:
+        print(f"Warning: GoEmotion model not loaded ({e}). Text emotion detection disabled.")
+else:
+    print("GoEmotion model disabled (set ENABLE_GOEMOTIONS=1 to enable).")
 
 # librosa for prosody analysis (pitch, energy, per-sentence WPM)
 _librosa_available = False
