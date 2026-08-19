@@ -1,9 +1,7 @@
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
-import whisper
-import torch
+import requests
 import numpy as np
 import soundfile as sf
-from speechbrain.inference import EncoderClassifier
 import tempfile
 import os
 from pydantic import BaseModel
@@ -13,13 +11,41 @@ app = FastAPI(title="Articulation AI Service")
 
 device = "cpu"
 
-# Load Whisper model once at startup.
-# "small" is markedly more accurate than "base" and still CPU-viable.
-# Override with WHISPER_MODEL=base for faster/lighter, or medium for best.
-WHISPER_MODEL = os.environ.get("WHISPER_MODEL", "small")
-print(f"Loading Whisper model ({WHISPER_MODEL})... (first run downloads the model)")
-whisper_model = whisper.load_model(WHISPER_MODEL, device=device)
-print("Whisper model loaded.")
+# Transcription is delegated to Groq's hosted Whisper API rather than running
+# Whisper locally — the local model + torch requires more RAM than fits on
+# constrained hosting (e.g. 512MB free tiers). Prosody/filler/pause analysis
+# below still runs locally on the raw audio and Groq's word timestamps.
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
+GROQ_WHISPER_MODEL = os.environ.get("GROQ_WHISPER_MODEL", "whisper-large-v3-turbo")
+GROQ_TRANSCRIBE_URL = "https://api.groq.com/openai/v1/audio/transcriptions"
+if GROQ_API_KEY:
+    print(f"Groq transcription configured (model: {GROQ_WHISPER_MODEL}).")
+else:
+    print("Warning: GROQ_API_KEY not set. Transcription will fail until it is configured.")
+
+
+def transcribe_with_groq(tmp_path: str, context: Optional[str]) -> dict:
+    if not GROQ_API_KEY:
+        raise RuntimeError("GROQ_API_KEY not configured on ai-service")
+    with open(tmp_path, "rb") as f:
+        files = {"file": (os.path.basename(tmp_path), f)}
+        data = {
+            "model": GROQ_WHISPER_MODEL,
+            "response_format": "verbose_json",
+            "timestamp_granularities[]": "word",
+        }
+        if context:
+            data["prompt"] = context[:300]
+        resp = requests.post(
+            GROQ_TRANSCRIBE_URL,
+            headers={"Authorization": f"Bearer {GROQ_API_KEY}"},
+            files=files,
+            data=data,
+            timeout=120,
+        )
+    if resp.status_code != 200:
+        raise RuntimeError(f"Groq transcription failed ({resp.status_code}): {resp.text[:300]}")
+    return resp.json()
 
 # SpeechBrain emotion classifier (audio-based, 4 classes — optional, memory-heavy).
 # Disabled by default so the service fits in constrained hosting (e.g. 512MB).
@@ -27,6 +53,7 @@ print("Whisper model loaded.")
 emotion_model = None
 if os.environ.get("ENABLE_EMOTION_MODEL") == "1":
     try:
+        from speechbrain.inference import EncoderClassifier
         emotion_model = EncoderClassifier.from_hparams(
             source="speechbrain/emotion-recognition-wav2vec2-IEMOCAP",
             savedir="pretrained_models/emotion"
@@ -196,24 +223,24 @@ async def transcribe_audio(file: UploadFile = File(...), context: str = Form(Non
             tmp.write(await file.read())
             tmp_path = tmp.name
 
-        # Transcribe with Whisper (verbatim, word-level timestamps).
-        # initial_prompt primes the decoder with the topic the speaker is
-        # addressing, markedly improving recognition of on-topic vocabulary.
-        transcribe_kwargs = {"word_timestamps": True}
-        if context:
-            transcribe_kwargs["initial_prompt"] = context[:300]
-        result = whisper_model.transcribe(tmp_path, **transcribe_kwargs)
+        # Transcribe via Groq's hosted Whisper API (verbatim, word-level
+        # timestamps). The prompt primes the decoder with the topic the
+        # speaker is addressing, markedly improving recognition of on-topic
+        # vocabulary.
+        try:
+            result = transcribe_with_groq(tmp_path, context)
+        except Exception as e:
+            raise HTTPException(502, detail=f"Transcription failed: {e}")
 
-        # Flatten word segments from all segments
+        # Flatten word segments
         word_segments = []
-        for seg in result.get("segments", []):
-            for w in seg.get("words", []):
-                word_segments.append({
-                    "word": w["word"].strip(),
-                    "start": round(w["start"], 2),
-                    "end": round(w["end"], 2),
-                    "probability": round(w.get("probability", 1.0), 2),
-                })
+        for w in result.get("words", []):
+            word_segments.append({
+                "word": w["word"].strip(),
+                "start": round(w["start"], 2),
+                "end": round(w["end"], 2),
+                "probability": 1.0,
+            })
 
         # Count filler words
         filler_counts: Dict[str, int] = {}
@@ -236,9 +263,9 @@ async def transcribe_audio(file: UploadFile = File(...), context: str = Form(Non
 
         # Compute speech metrics
         total_words = len(word_segments)
-        duration_seconds = 0.0
-        if result.get("segments"):
-            duration_seconds = result["segments"][-1]["end"]
+        duration_seconds = float(result.get("duration") or 0.0)
+        if not duration_seconds and word_segments:
+            duration_seconds = word_segments[-1]["end"]
 
         wpm = round((total_words / duration_seconds) * 60) if duration_seconds > 0 else 0
         total_fillers = sum(f["count"] for f in filler_word_list)
@@ -256,6 +283,7 @@ async def transcribe_audio(file: UploadFile = File(...), context: str = Form(Non
         emotion = None
         if emotion_model is not None:
             try:
+                import torch
                 signal, _ = sf.read(tmp_path)
                 signal_tensor = torch.tensor(signal, dtype=torch.float32).unsqueeze(0)
                 _, _, _, text_lab = emotion_model.classify_batch(signal_tensor)
@@ -307,8 +335,9 @@ async def root():
 @app.get("/health")
 async def health():
     return {
-        "whisper": "ready" if whisper_model is not None else "down",
-        "whisper_model": WHISPER_MODEL,
+        "whisper": "ready" if GROQ_API_KEY else "down",
+        "whisper_model": GROQ_WHISPER_MODEL,
+        "whisper_backend": "groq",
         "emotion": "ready" if emotion_model is not None else "disabled",
         "goemotions": "ready" if goemotions_model is not None else "disabled",
         "prosody": "ready" if _librosa_available else "disabled",
