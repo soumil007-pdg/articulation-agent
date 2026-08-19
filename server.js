@@ -11,7 +11,7 @@ const app = express();
 const PORT = process.env.PORT || 8000;
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8001';
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+const GROQ_MODEL = process.env.GROQ_MODEL || 'openai/gpt-oss-120b';
 const GROQ_API_KEY = process.env.GROQ_API_KEY || process.env.API_KEY || '';
 
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
