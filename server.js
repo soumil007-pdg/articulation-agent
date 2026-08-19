@@ -97,6 +97,30 @@ async function callGroq(prompt) {
     return stripCodeFences(text);
 }
 
+// Render's free tier spins services down after ~15 min idle; waking one up
+// can take 20-50s. Retry with backoff so a cold AI service doesn't surface
+// as an immediate 500 to the user.
+async function fetchWithRetry(url, options, { attempts = 4, delaysMs = [3000, 8000, 15000] } = {}) {
+    let lastError;
+    for (let i = 0; i < attempts; i++) {
+        try {
+            const controller = new AbortController();
+            const t = setTimeout(() => controller.abort(), 20000);
+            const res = await fetch(url, { ...options, signal: controller.signal });
+            clearTimeout(t);
+            if (res.ok || (res.status < 500 && res.status !== 0)) return res;
+            lastError = new Error(`Upstream returned ${res.status}`);
+        } catch (err) {
+            lastError = err;
+        }
+        if (i < delaysMs.length) {
+            console.log(`⏳ AI service not ready yet, retrying in ${delaysMs[i]}ms (attempt ${i + 1}/${attempts})...`);
+            await new Promise((r) => setTimeout(r, delaysMs[i]));
+        }
+    }
+    throw lastError;
+}
+
 // ── Routes ───────────────────────────────────────────────────────────────────
 
 // Main coaching endpoint (Groq)
@@ -137,10 +161,15 @@ app.post('/upload-audio', upload.single('audio'), async (req, res) => {
         });
         if (req.body?.context) form.append('context', String(req.body.context).slice(0, 300));
 
-        const aiResponse = await fetch(`${AI_SERVICE_URL}/transcribe-audio`, {
+        // Buffer the multipart body up front so it can be safely resent on
+        // each retry attempt — a FormData stream can only be read once.
+        const formHeaders = form.getHeaders();
+        const formBuffer = form.getBuffer();
+
+        const aiResponse = await fetchWithRetry(`${AI_SERVICE_URL}/transcribe-audio`, {
             method: 'POST',
-            body: form,
-            headers: form.getHeaders(),
+            body: formBuffer,
+            headers: formHeaders,
         });
 
         if (!aiResponse.ok) {
@@ -173,10 +202,12 @@ app.get('/health', async (req, res) => {
         timestamp: new Date().toISOString(),
     };
 
-    // Probe Python service (with short timeout)
+    // Probe Python service. Render free-tier services can take 20-50s to wake
+    // from a cold start, so give the probe enough room to catch a service
+    // that's already stirring rather than always reporting a false "down".
     try {
         const controller = new AbortController();
-        const t = setTimeout(() => controller.abort(), 1500);
+        const t = setTimeout(() => controller.abort(), 5000);
         const r = await fetch(`${AI_SERVICE_URL}/health`, { signal: controller.signal });
         clearTimeout(t);
         if (r.ok) {
