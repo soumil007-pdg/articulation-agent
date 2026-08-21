@@ -6,6 +6,8 @@ import { PersuasionTriangle } from "./PersuasionTriangle";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { play } from "@/lib/sound";
+import { printSessionReport } from "@/lib/report";
+import type { Session } from "@/lib/storage";
 
 function ScoreRing({ score }: { score: number }) {
   const r = 46;
@@ -51,12 +53,15 @@ export function ResultsView({
   noonan,
   response,
   speech,
+  session,
 }: {
   scoring: ScoringResult;
-  rhetoric?: RhetoricResult | null;
+  rhetoric?: RhetoricResult | null | undefined;
   noonan: NoonanResult;
   response: string;
-  speech?: Record<string, unknown> | null;
+  speech?: Record<string, unknown> | null | undefined;
+  /** Present when reopening a saved session; carries its real date and context. */
+  session?: Session | undefined;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -92,14 +97,24 @@ export function ResultsView({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const download = () => {
-    const blob = new Blob([exportText()], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `articulate-session-${Date.now()}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const downloadPdf = () => {
+    // A freshly-finished run isn't passed a saved Session, so synthesise the
+    // same shape from what's on screen — the report only reads these fields.
+    printSessionReport(
+      session ?? {
+        id: "current",
+        date: new Date().toISOString(),
+        goal: "Practice",
+        audience: "—",
+        prompt: "Session report",
+        response,
+        mode: speech ? "audio" : "text",
+        scoring,
+        rhetoric: rhetoric ?? null,
+        noonan,
+        speech: speech ?? null,
+      },
+    );
   };
 
   return (
@@ -120,8 +135,8 @@ export function ResultsView({
           <Button variant="outline" onClick={copy} className="ui-sans">
             {copied ? "Copied" : "Copy"}
           </Button>
-          <Button variant="outline" onClick={download} className="ui-sans">
-            Export
+          <Button variant="outline" onClick={downloadPdf} className="ui-sans">
+            PDF
           </Button>
         </div>
       </div>

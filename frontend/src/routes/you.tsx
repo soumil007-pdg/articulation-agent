@@ -5,12 +5,21 @@ import { AppShell } from "@/components/AppShell";
 import { Companion } from "@/components/mascots";
 import { MascotStudio } from "@/components/MascotStudio";
 import { HealthIndicator } from "@/components/HealthIndicator";
+import { ResultsView } from "@/components/ResultsView";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { DEFAULT_API_BASE, getApiBase, setApiBase } from "@/lib/api";
-import { clearSessions, useProfile, useSessions } from "@/lib/storage";
+import { printAllSessions } from "@/lib/report";
+import { clearSessions, useProfile, useSessions, type Session } from "@/lib/storage";
 
 export const Route = createFileRoute("/you")({
   head: () => ({
@@ -35,8 +44,18 @@ function YouInner() {
   const { profile, update } = useProfile();
   const sessions = useSessions();
   const [base, setBase] = useState(getApiBase());
+  const [open, setOpen] = useState<Session | null>(null);
 
-  const exportData = () => {
+  const exportPdf = () => {
+    if (sessions.length === 0) {
+      toast.error("No sessions to export yet");
+      return;
+    }
+    printAllSessions(sessions, profile.name || undefined);
+  };
+
+  /** Raw JSON stays available as a portable backup of the underlying data. */
+  const exportJson = () => {
     const blob = new Blob([JSON.stringify({ profile, sessions }, null, 2)], {
       type: "application/json",
     });
@@ -140,8 +159,9 @@ function YouInner() {
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="font-display text-xl">Session history</h2>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={exportData}>
-                Export data
+              <Button onClick={exportPdf}>Export PDF</Button>
+              <Button variant="outline" onClick={exportJson}>
+                Backup (.json)
               </Button>
               <Button
                 variant="outline"
@@ -157,24 +177,67 @@ function YouInner() {
           {sessions.length === 0 ? (
             <p className="hand text-lg text-muted-foreground">Nothing here yet.</p>
           ) : (
-            <ul className="divide-y-2 divide-border">
-              {sessions.map((s) => (
-                <li key={s.id} className="flex items-center justify-between gap-4 py-3">
-                  <div className="min-w-0">
-                    <div className="truncate font-semibold">{s.prompt}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {new Date(s.date).toLocaleString()} · {s.goal} · {s.audience} · {s.mode}
-                    </div>
-                  </div>
-                  <div className="text-xl font-extrabold">
-                    {Math.round(s.scoring?.overallScore ?? 0)}
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <>
+              <p className="text-xs text-muted-foreground">
+                Tap any session to reopen the full coaching report.
+              </p>
+              <ul className="divide-y-2 divide-border">
+                {sessions.map((s) => (
+                  <li key={s.id}>
+                    <button
+                      type="button"
+                      onClick={() => setOpen(s)}
+                      className="tactile flex w-full items-center justify-between gap-4 rounded-xl px-2 py-3 text-left hover:bg-accent"
+                    >
+                      <div className="min-w-0">
+                        <div className="truncate font-semibold">{s.prompt}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {new Date(s.date).toLocaleString()} · {s.goal} · {s.audience} · {s.mode}
+                        </div>
+                      </div>
+                      <div className="text-xl font-extrabold">
+                        {Math.round(s.scoring?.overallScore ?? 0)}
+                      </div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
         </section>
       </div>
+
+      <Dialog open={open !== null} onOpenChange={(v) => !v && setOpen(null)}>
+        <DialogContent className="max-h-[88vh] max-w-4xl overflow-y-auto">
+          {open && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-left">{open.prompt}</DialogTitle>
+                <DialogDescription className="text-left">
+                  {new Date(open.date).toLocaleString()} · {open.goal} · {open.audience} ·{" "}
+                  {open.mode}
+                </DialogDescription>
+              </DialogHeader>
+              {/* On a fresh run your words are still in the textarea above; when
+                  reopening history they're gone, so show them with the feedback. */}
+              <section className="doodle-card p-5">
+                <h3 className="ui-sans mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                  {open.mode === "audio" ? "What you said" : "What you wrote"}
+                </h3>
+                <p className="whitespace-pre-wrap text-base leading-relaxed">{open.response}</p>
+              </section>
+              <ResultsView
+                scoring={open.scoring}
+                rhetoric={open.rhetoric}
+                noonan={open.noonan}
+                response={open.response}
+                speech={open.speech}
+                session={open}
+              />
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }

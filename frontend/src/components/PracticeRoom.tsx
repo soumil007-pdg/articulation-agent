@@ -28,7 +28,7 @@ import {
 } from "@/lib/analysis";
 import { uploadAudio } from "@/lib/api";
 import { noonanCheck, type NoonanResult } from "@/lib/noonan";
-import { computeStreak, saveSession, useProfile, useSessions } from "@/lib/storage";
+import { computeStreak, saveSession, useProfile, useSessions, type Session } from "@/lib/storage";
 import { takePractice } from "@/lib/practice-bus";
 import { cn } from "@/lib/utils";
 
@@ -53,6 +53,7 @@ export function PracticeRoom() {
   const [rhetoric, setRhetoric] = useState<RhetoricResult | null>(null);
   const [noonan, setNoonan] = useState<NoonanResult | null>(null);
   const [speech, setSpeech] = useState<Record<string, unknown> | null>(null);
+  const [lastSession, setLastSession] = useState<Session | null>(null);
   const [celebrating, setCelebrating] = useState(false);
   const [recording, setRecording] = useState(false);
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -105,7 +106,7 @@ export function PracticeRoom() {
       setStage("Exercises");
       await new Promise((r) => setTimeout(r, 250));
 
-      saveSession({
+      const saved: Session = {
         id: crypto.randomUUID(),
         date: new Date().toISOString(),
         goal: goalLabel,
@@ -117,7 +118,9 @@ export function PracticeRoom() {
         rhetoric: rhet,
         noonan: local,
         speech: speechData ?? null,
-      });
+      };
+      saveSession(saved);
+      setLastSession(saved);
       setStage(null);
       setCelebrating(true);
     } catch (err) {
@@ -331,6 +334,7 @@ export function PracticeRoom() {
               noonan={noonan}
               response={response}
               speech={speech}
+              session={lastSession ?? undefined}
             />
           )}
         </div>
