@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import type { RhetoricResult, ScoringResult } from "./analysis";
+import type { CraftResult, RhetoricResult, ScoringResult } from "./analysis";
 import type { NoonanResult } from "./noonan";
 
 export type Session = {
@@ -13,6 +13,8 @@ export type Session = {
   scoring: ScoringResult;
   rhetoric?: RhetoricResult | null;
   noonan: NoonanResult;
+  /** Absent on sessions saved before the coaching rebuild. */
+  craft?: CraftResult | null;
   speech?: Record<string, unknown> | null;
 };
 

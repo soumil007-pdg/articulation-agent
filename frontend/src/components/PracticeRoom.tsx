@@ -19,9 +19,10 @@ import {
 import {
   AUDIENCES,
   GOALS,
-  analyzeRhetoric,
+  buildCraftPlan,
   scoreResponse,
   type Audience,
+  type CraftResult,
   type GoalId,
   type RhetoricResult,
   type ScoringResult,
@@ -52,6 +53,7 @@ export function PracticeRoom() {
   const [scoring, setScoring] = useState<ScoringResult | null>(null);
   const [rhetoric, setRhetoric] = useState<RhetoricResult | null>(null);
   const [noonan, setNoonan] = useState<NoonanResult | null>(null);
+  const [craft, setCraft] = useState<CraftResult | null>(null);
   const [speech, setSpeech] = useState<Record<string, unknown> | null>(null);
   const [lastSession, setLastSession] = useState<Session | null>(null);
   const [celebrating, setCelebrating] = useState(false);
@@ -81,30 +83,46 @@ export function PracticeRoom() {
     speechData?: Record<string, unknown> | null,
   ) {
     try {
-      setStage("Scoring");
-      const scored = await scoreResponse({ goal: goalLabel, audience, prompt, response: text });
-      setScoring(scored);
-      setStage("Vocabulary");
       const local = noonanCheck(text);
       setNoonan(local);
-      setStage("Structure");
-      await new Promise((r) => setTimeout(r, 250));
-      setStage("Rhetoric");
+
+      setStage("Scoring");
+      const scored = await scoreResponse({
+        goal: goalLabel,
+        audience,
+        prompt,
+        response: text,
+        mode: usedMode,
+        speech: speechData ?? null,
+      });
+      setScoring(scored);
+
+      // Rhetoric and craft share one call — see CRAFT_SCHEMA on why splitting
+      // them blew past Groq's per-minute token budget.
+      setStage("Craft plan");
+      let craft: CraftResult | null = null;
       let rhet: RhetoricResult | null = null;
       try {
-        rhet = await analyzeRhetoric({
+        const bundle = await buildCraftPlan({
           goal: goalLabel,
           audience,
           prompt,
           response: text,
+          mode: usedMode,
+          scoring: scored,
           avoidWords: local.flabbyWords,
         });
+        rhet = bundle.rhetoric ?? null;
+        craft = {
+          vocabulary: bundle.vocabulary,
+          restructure: bundle.restructure,
+          exercises: bundle.exercises,
+        };
       } catch {
-        toast.message("Rhetoric analysis unavailable for this run");
+        toast.message("Craft plan unavailable for this run");
       }
       setRhetoric(rhet);
-      setStage("Exercises");
-      await new Promise((r) => setTimeout(r, 250));
+      setCraft(craft);
 
       const saved: Session = {
         id: crypto.randomUUID(),
@@ -117,6 +135,7 @@ export function PracticeRoom() {
         scoring: scored,
         rhetoric: rhet,
         noonan: local,
+        craft,
         speech: speechData ?? null,
       };
       saveSession(saved);
@@ -140,6 +159,7 @@ export function PracticeRoom() {
     }
     setScoring(null);
     setRhetoric(null);
+    setCraft(null);
     setSpeech(null);
     await runAnalysis(response.trim(), "text");
   }
@@ -334,6 +354,7 @@ export function PracticeRoom() {
               noonan={noonan}
               response={response}
               speech={speech}
+              craft={craft}
               session={lastSession ?? undefined}
             />
           )}

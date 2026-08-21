@@ -60,12 +60,16 @@ export function warmAiService(): void {
   fetch(`${getApiBase()}/warm-ai`, { method: "POST" }).catch(() => {});
 }
 
-/** POST /coach — returns { text } where text is a JSON string; parsed here. */
-export async function coach<T = unknown>(prompt: string): Promise<T> {
+/**
+ * POST /coach — returns { text } where text is a JSON string; parsed here.
+ * `maxTokens` sizes the reply: too small truncates the JSON mid-object and
+ * silently loses whole sections, too large eats the free tier's minute budget.
+ */
+export async function coach<T = unknown>(prompt: string, maxTokens?: number): Promise<T> {
   const data = await request<{ text: string }>("/coach", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt }),
+    body: JSON.stringify(maxTokens ? { prompt, maxTokens } : { prompt }),
   });
   return parseModelJson<T>(data?.text ?? "");
 }

@@ -1,7 +1,8 @@
 import { Peitho } from "./mascots";
 import { cn } from "@/lib/utils";
 
-export const STAGES = ["Scoring", "Vocabulary", "Structure", "Rhetoric", "Exercises"] as const;
+/** One entry per real AI call — scoring and rhetoric run together, craft follows. */
+export const STAGES = ["Scoring", "Craft plan"] as const;
 export type Stage = (typeof STAGES)[number];
 
 export function AnalysisProgress({ stage }: { stage: Stage }) {

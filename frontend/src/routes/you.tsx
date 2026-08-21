@@ -232,6 +232,7 @@ function YouInner() {
                 noonan={open.noonan}
                 response={open.response}
                 speech={open.speech}
+                craft={open.craft}
                 session={open}
               />
             </>

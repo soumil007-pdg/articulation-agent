@@ -1,6 +1,15 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { DIMENSIONS, familyColor, type RhetoricResult, type ScoringResult } from "@/lib/analysis";
+import { useNavigate } from "@tanstack/react-router";
+import {
+  DIMENSIONS,
+  deliveryMetrics,
+  familyColor,
+  type CraftResult,
+  type RhetoricResult,
+  type ScoringResult,
+} from "@/lib/analysis";
+import { queuePractice } from "@/lib/practice-bus";
 import type { NoonanResult } from "@/lib/noonan";
 import { PersuasionTriangle } from "./PersuasionTriangle";
 import { Button } from "@/components/ui/button";
@@ -53,6 +62,7 @@ export function ResultsView({
   noonan,
   response,
   speech,
+  craft,
   session,
 }: {
   scoring: ScoringResult;
@@ -60,10 +70,13 @@ export function ResultsView({
   noonan: NoonanResult;
   response: string;
   speech?: Record<string, unknown> | null | undefined;
+  craft?: CraftResult | null | undefined;
   /** Present when reopening a saved session; carries its real date and context. */
   session?: Session | undefined;
 }) {
   const [copied, setCopied] = useState(false);
+  const navigate = useNavigate();
+  const metrics = deliveryMetrics(speech);
 
   // score reveal chime
   useEffect(() => {
@@ -77,10 +90,19 @@ export function ResultsView({
       ``,
       `What the coach heard: ${scoring.interpretedMeaning}`,
       ``,
-      ...DIMENSIONS.map(
-        (d) => `${d}: ${scoring.scores?.[d]?.score ?? "—"} — ${scoring.scores?.[d]?.justification ?? ""}`,
-      ),
+      ...DIMENSIONS.flatMap((d) => {
+        const e = scoring.scores?.[d];
+        const rows = [`${d}: ${e?.score ?? "—"} — ${e?.diagnosis ?? e?.justification ?? ""}`];
+        if (e?.fix) rows.push(`  Fix: ${e.fix}`);
+        return rows;
+      }),
       ``,
+      ...(craft?.restructure?.rewrite
+        ? [`Say it better:`, craft.restructure.rewrite, ``]
+        : []),
+      ...(craft?.vocabulary?.swaps?.length
+        ? [`Word swaps:`, ...craft.vocabulary.swaps.map((s) => `  ${s.from} → ${s.to}`), ``]
+        : []),
       `Persuasion — ethos ${scoring.persuasion?.ethos}% / pathos ${scoring.persuasion?.pathos}% / logos ${scoring.persuasion?.logos}%`,
       `Key action: ${scoring.keyActionItem}`,
       ``,
@@ -112,6 +134,7 @@ export function ResultsView({
         scoring,
         rhetoric: rhetoric ?? null,
         noonan,
+        craft: craft ?? null,
         speech: speech ?? null,
       },
     );
@@ -141,6 +164,92 @@ export function ResultsView({
         </div>
       </div>
 
+      {craft?.restructure?.rewrite && (
+        <div className="doodle-card space-y-4 p-6">
+          <div>
+            <h3 className="text-xl">Say it better</h3>
+            <p className="ui-sans text-sm text-muted-foreground">
+              Your points, your voice — rebuilt for {session?.audience ?? "this audience"}.
+            </p>
+          </div>
+
+          {craft.restructure.outline?.length > 0 && (
+            <ol className="ui-sans space-y-1.5 text-sm">
+              {craft.restructure.outline.map((step, i) => (
+                <li key={i} className="flex gap-2.5">
+                  <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">
+                    {i + 1}
+                  </span>
+                  <span>{step}</span>
+                </li>
+              ))}
+            </ol>
+          )}
+
+          <blockquote className="border-l-4 border-gold bg-gold/10 px-4 py-3 text-base leading-relaxed">
+            {craft.restructure.rewrite}
+          </blockquote>
+
+          {craft.restructure.whatChanged?.length > 0 && (
+            <div>
+              <div className="ui-sans mb-1.5 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                What changed
+              </div>
+              <ul className="ui-sans list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                {craft.restructure.whatChanged.map((c, i) => (
+                  <li key={i}>{c}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
+      {Boolean(craft?.vocabulary?.swaps?.length || craft?.vocabulary?.upgrades?.length) && craft && (
+        <div className="doodle-card space-y-4 p-6">
+          <h3 className="text-xl">Vocabulary</h3>
+
+          {craft.vocabulary.swaps?.length > 0 && (
+            <div className="space-y-2">
+              <div className="ui-sans text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                Swap what you said
+              </div>
+              {craft.vocabulary.swaps.map((s, i) => (
+                <div key={i} className="doodle-soft ui-sans p-3 text-sm">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-md bg-destructive/15 px-2 py-0.5 line-through opacity-75">
+                      {s.from}
+                    </span>
+                    <span aria-hidden>→</span>
+                    <span className="rounded-md bg-primary/15 px-2 py-0.5 font-bold text-primary">
+                      {s.to}
+                    </span>
+                  </div>
+                  {s.why && <p className="mt-1 text-muted-foreground">{s.why}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {craft.vocabulary.upgrades?.length > 0 && (
+            <div className="space-y-2">
+              <div className="ui-sans text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                Words worth owning
+              </div>
+              {craft.vocabulary.upgrades.map((u, i) => (
+                <div key={i} className="doodle-soft ui-sans p-3 text-sm">
+                  <div className="text-base font-bold">{u.word}</div>
+                  <div className="text-muted-foreground">{u.definition}</div>
+                  {u.exampleInYourContext && (
+                    <p className="hand mt-1 text-base">“{u.exampleInYourContext}”</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="doodle-card p-6">
         <h3 className="text-xl">Seven dimensions</h3>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -155,7 +264,16 @@ export function ResultsView({
                   </span>
                 </div>
                 <Progress value={entry?.score ?? 0} className="h-2.5" />
-                <p className="ui-sans text-sm text-muted-foreground">{entry?.justification}</p>
+                {/* Older sessions only stored a single `justification` field. */}
+                <p className="ui-sans text-sm text-muted-foreground">
+                  {entry?.diagnosis ?? entry?.justification}
+                </p>
+                {entry?.fix && (
+                  <p className="ui-sans rounded-lg bg-primary/10 px-2.5 py-1.5 text-sm">
+                    <span className="font-bold text-primary">Fix: </span>
+                    {entry.fix}
+                  </p>
+                )}
               </div>
             );
           })}
@@ -281,20 +399,82 @@ export function ResultsView({
         </div>
       )}
 
-      {speech && (
-        <div className="doodle-card p-6">
-          <h3 className="text-xl">Speech metrics</h3>
-          <div className="mt-3 grid gap-3 sm:grid-cols-3">
-            {Object.entries(speech)
-              .filter(([, v]) => typeof v === "number" || typeof v === "string")
-              .slice(0, 9)
-              .map(([k, v]) => (
-                <div key={k} className="doodle-soft p-3">
-                  <div className="ui-sans text-xs uppercase text-muted-foreground">{k}</div>
-                  <div className="truncate text-lg font-bold">{String(v)}</div>
+      {(metrics.length > 0 || scoring.delivery) && (
+        <div className="doodle-card space-y-4 p-6">
+          <h3 className="text-xl">How you delivered it</h3>
+
+          {metrics.length > 0 && (
+            <div className="grid gap-3 sm:grid-cols-3">
+              {metrics.map((m) => (
+                <div key={m.label} className="doodle-soft p-3">
+                  <div className="ui-sans text-xs uppercase text-muted-foreground">{m.label}</div>
+                  <div className="text-lg font-bold">{m.value}</div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {scoring.delivery && (
+            <div className="ui-sans space-y-1.5 text-sm">
+              {(
+                [
+                  ["Pace", scoring.delivery.paceVerdict],
+                  ["Fillers", scoring.delivery.fillerVerdict],
+                  ["Pauses", scoring.delivery.pauseVerdict],
+                  ["Energy", scoring.delivery.energyVerdict],
+                  ["Tone", scoring.delivery.perceivedTone],
+                  ["Emotional read", scoring.delivery.emotionalRead],
+                ] as const
+              )
+                .filter(([, v]) => v)
+                .map(([k, v]) => (
+                  <p key={k}>
+                    <span className="font-semibold">{k}:</span>{" "}
+                    <span className="text-muted-foreground">{v}</span>
+                  </p>
+                ))}
+              {scoring.delivery.deliveryFix && (
+                <p className="rounded-lg bg-primary/10 px-2.5 py-1.5">
+                  <span className="font-bold text-primary">Fix: </span>
+                  {scoring.delivery.deliveryFix}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {craft?.exercises && craft.exercises.length > 0 && (
+        <div className="doodle-card space-y-3 p-6">
+          <div>
+            <h3 className="text-xl">Practise this next</h3>
+            <p className="ui-sans text-sm text-muted-foreground">
+              Aimed at what scored lowest here.
+            </p>
           </div>
+          {craft.exercises.map((ex, i) => (
+            <div key={i} className="doodle-soft ui-sans space-y-2 p-4">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <div className="text-base font-bold">{ex.title}</div>
+                {ex.targets && (
+                  <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                    {ex.targets}
+                  </span>
+                )}
+              </div>
+              <p className="text-sm">{ex.instruction}</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  queuePractice({ prompt: ex.instruction, label: ex.title });
+                  navigate({ to: "/practice" });
+                }}
+              >
+                Drill this
+              </Button>
+            </div>
+          ))}
         </div>
       )}
     </div>

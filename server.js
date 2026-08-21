@@ -43,14 +43,34 @@ function stripCodeFences(text) {
         .trim();
 }
 
-async function callGroq(prompt) {
+/**
+ * A single coaching run fires several Groq calls back to back, which can trip
+ * the free tier's tokens-per-minute limit. Groq tells us how long to wait via
+ * `retry-after`, so honour it rather than surfacing the 429 to the user.
+ */
+async function groqFetchWithRateLimitRetry(init, attempts = 3) {
+    let response;
+    for (let i = 0; i < attempts; i++) {
+        response = await fetch(GROQ_URL, init);
+        if (response.status !== 429 || i === attempts - 1) return response;
+
+        const header = Number(response.headers.get('retry-after'));
+        // Cap the wait so a long retry-after can't stall the request forever.
+        const waitMs = Math.min(Number.isFinite(header) && header > 0 ? header * 1000 : 2000 * (i + 1), 12000);
+        console.log(`⏳ Groq rate limit, retrying in ${waitMs}ms (attempt ${i + 1}/${attempts})...`);
+        await new Promise((r) => setTimeout(r, waitMs));
+    }
+    return response;
+}
+
+async function callGroq(prompt, maxTokens = 2048) {
     if (!GROQ_API_KEY) {
         const e = new Error('GROQ_API_KEY missing. Get a free key at https://console.groq.com/keys and add it to api.env');
         e.code = 'NO_KEY';
         throw e;
     }
 
-    const response = await fetch(GROQ_URL, {
+    const response = await groqFetchWithRateLimitRetry({
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -66,9 +86,11 @@ async function callGroq(prompt) {
                 { role: 'user', content: prompt },
             ],
             temperature: 0.5,
-            // Coaching responses are compact JSON; a lower cap reduces
-            // per-request token pressure against the free-tier TPM limit.
-            max_tokens: 2048,
+            // Callers size this themselves: the free tier allows 8000 tokens a
+            // minute, so a scoring call keeps the default while the larger craft
+            // response (rhetoric + vocabulary + rewrite + drills) asks for more.
+            // Too low a cap truncates the JSON mid-object and loses whole sections.
+            max_tokens: maxTokens,
             response_format: { type: 'json_object' },
         }),
     });
@@ -126,10 +148,12 @@ async function fetchWithRetry(url, options, { attempts = 4, delaysMs = [3000, 80
 // Main coaching endpoint (Groq)
 async function handleCoach(req, res) {
     try {
-        const { prompt } = req.body;
+        const { prompt, maxTokens } = req.body;
         if (!prompt) return res.status(400).json({ error: 'Prompt is required.' });
 
-        const text = await callGroq(prompt);
+        const requested = Number(maxTokens);
+        const cap = Number.isFinite(requested) ? Math.min(Math.max(requested, 256), 6000) : 2048;
+        const text = await callGroq(prompt, cap);
         res.json({ text });
     } catch (error) {
         console.error(`🔴 Coaching error [${error.code || '?'}]:`, error.message);
