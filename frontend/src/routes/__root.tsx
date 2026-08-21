@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { warmAiService } from "../lib/api";
 import { Toaster } from "@/components/ui/sonner";
 import { StarfieldCanvas } from "@/components/StarfieldCanvas";
 import { BrandMark } from "@/components/BrandMark";
@@ -154,8 +155,16 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+let hasWarmedAi = false;
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  useEffect(() => {
+    if (hasWarmedAi) return;
+    hasWarmedAi = true;
+    warmAiService();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

@@ -51,6 +51,15 @@ export function getHealth(): Promise<HealthStatus> {
   return request<HealthStatus>("/health");
 }
 
+/**
+ * Fire-and-forget: tells the backend to start waking the AI service.
+ * Call once as early as possible (app boot) so the free-tier Python
+ * service has a head start before the user finishes recording.
+ */
+export function warmAiService(): void {
+  fetch(`${getApiBase()}/warm-ai`, { method: "POST" }).catch(() => {});
+}
+
 /** POST /coach — returns { text } where text is a JSON string; parsed here. */
 export async function coach<T = unknown>(prompt: string): Promise<T> {
   const data = await request<{ text: string }>("/coach", {

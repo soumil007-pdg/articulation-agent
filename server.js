@@ -191,6 +191,22 @@ app.post('/upload-audio', upload.single('audio'), async (req, res) => {
     }
 });
 
+// Fire-and-forget wake-up ping — called by the frontend as soon as the app
+// loads, so the AI service (which sleeps on Render's free tier) starts
+// spinning up well before the user finishes recording. Responds immediately
+// so it never blocks page load; the outbound request to the AI service is
+// given a long timeout so it actually rides out a full cold-start wake
+// instead of being aborted early like the /health probe is.
+app.post('/warm-ai', (req, res) => {
+    res.status(202).json({ status: 'warming' });
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), 60000);
+    fetch(`${AI_SERVICE_URL}/health`, { signal: controller.signal })
+        .then(() => console.log('🔥 AI service warmed'))
+        .catch(() => {})
+        .finally(() => clearTimeout(t));
+});
+
 // Health endpoint — used by frontend on startup and by humans for diagnosis
 app.get('/health', async (req, res) => {
     const health = {
