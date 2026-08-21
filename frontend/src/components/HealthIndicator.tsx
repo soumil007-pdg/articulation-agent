@@ -36,7 +36,7 @@ export function HealthIndicator({ compact = false }: { compact?: boolean }) {
       <div className="truncate text-muted-foreground">{getApiBase()}</div>
       {data && (
         <div className="flex flex-wrap gap-1.5 text-[11px] text-muted-foreground">
-          {(["express", "python", "groq"] as const).map((k) => (
+          {(["express", "python", "gemini"] as const).map((k) => (
             <span key={k} className="rounded-full bg-muted px-2 py-0.5">
               {k}: {String(data[k] ?? "—")}
             </span>

@@ -1,4 +1,4 @@
-// Articulate AI Coach — Backend Server (Groq + Whisper)
+// Articulate AI Coach — Backend Server (Gemini coaching + Groq Whisper transcription)
 
 require('dotenv').config({ path: './api.env' });
 const express = require('express');
@@ -10,9 +10,15 @@ const fetch = (...args) => import('node-fetch').then(({ default: f }) => f(...ar
 const app = express();
 const PORT = process.env.PORT || 8000;
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8001';
-const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const GROQ_MODEL = process.env.GROQ_MODEL || 'openai/gpt-oss-120b';
-const GROQ_API_KEY = process.env.GROQ_API_KEY || process.env.API_KEY || '';
+
+// Coaching calls (/coach) run on Gemini — Groq's free tier caps at 8000
+// tokens/minute, which one coaching run nearly exhausts by itself. Whisper
+// transcription (/upload-audio, via ai-service) stays on Groq: that's a
+// separate quota and Gemini doesn't give reliable word-level timestamps,
+// which the pacing/pause/filler metrics are built from.
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
     .split(',').map(s => s.trim()).filter(Boolean);
@@ -44,78 +50,95 @@ function stripCodeFences(text) {
 }
 
 /**
- * A single coaching run fires several Groq calls back to back, which can trip
- * the free tier's tokens-per-minute limit. Groq tells us how long to wait via
- * `retry-after`, so honour it rather than surfacing the 429 to the user.
+ * A single coaching run can fire this back to back with other calls, which
+ * can trip a per-minute rate limit. The upstream tells us how long to wait
+ * via `retry-after`, so honour it rather than surfacing the 429 to the user.
  */
-async function groqFetchWithRateLimitRetry(init, attempts = 3) {
+async function fetchWithRateLimitRetry(url, init, attempts = 3) {
     let response;
     for (let i = 0; i < attempts; i++) {
-        response = await fetch(GROQ_URL, init);
+        response = await fetch(url, init);
         if (response.status !== 429 || i === attempts - 1) return response;
 
         const header = Number(response.headers.get('retry-after'));
         // Cap the wait so a long retry-after can't stall the request forever.
         const waitMs = Math.min(Number.isFinite(header) && header > 0 ? header * 1000 : 2000 * (i + 1), 12000);
-        console.log(`⏳ Groq rate limit, retrying in ${waitMs}ms (attempt ${i + 1}/${attempts})...`);
+        console.log(`⏳ Rate limit, retrying in ${waitMs}ms (attempt ${i + 1}/${attempts})...`);
         await new Promise((r) => setTimeout(r, waitMs));
     }
     return response;
 }
 
-async function callGroq(prompt, maxTokens = 2048) {
-    if (!GROQ_API_KEY) {
-        const e = new Error('GROQ_API_KEY missing. Get a free key at https://console.groq.com/keys and add it to api.env');
+async function callGemini(prompt, maxTokens = 2048) {
+    if (!GEMINI_API_KEY) {
+        const e = new Error('GEMINI_API_KEY missing. Get a free key at https://aistudio.google.com/apikey and add it to api.env');
         e.code = 'NO_KEY';
         throw e;
     }
 
-    const response = await groqFetchWithRateLimitRetry({
+    const response = await fetchWithRateLimitRetry(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${GROQ_API_KEY}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            model: GROQ_MODEL,
-            messages: [
+            contents: [
                 {
-                    role: 'system',
-                    content: 'You are an expert communication coach. Always respond with VALID JSON ONLY that exactly matches the schema requested in the user prompt. Do not include any prose, markdown, or code fences — only raw JSON.',
+                    role: 'user',
+                    parts: [
+                        {
+                            text: 'You are an expert communication coach. Always respond with VALID JSON ONLY that exactly matches the schema requested below. Do not include any prose, markdown, or code fences — only raw JSON.\n\n' + prompt,
+                        },
+                    ],
                 },
-                { role: 'user', content: prompt },
             ],
-            temperature: 0.5,
-            // Callers size this themselves: the free tier allows 8000 tokens a
-            // minute, so a scoring call keeps the default while the larger craft
-            // response (rhetoric + vocabulary + rewrite + drills) asks for more.
-            // Too low a cap truncates the JSON mid-object and loses whole sections.
-            max_tokens: maxTokens,
-            response_format: { type: 'json_object' },
+            generationConfig: {
+                temperature: 0.5,
+                // Same reasoning as before: callers size this per call so a
+                // low cap doesn't truncate the JSON mid-object.
+                maxOutputTokens: maxTokens,
+                responseMimeType: 'application/json',
+                // 2.5 Flash "thinks" before answering by default, and those
+                // thinking tokens are drawn from the SAME maxOutputTokens
+                // budget as the actual JSON — on a long coaching prompt it
+                // was spending the whole budget thinking and leaving nothing
+                // to write the answer, truncating mid-object every time.
+                // This is a structured-extraction task, not a reasoning task,
+                // so thinking buys nothing here.
+                thinkingConfig: { thinkingBudget: 0 },
+            },
         }),
     });
 
-    if (response.status === 401) {
-        const e = new Error('Groq API key is invalid. Check it at https://console.groq.com/keys');
+    if (response.status === 400 || response.status === 403) {
+        const e = new Error('Gemini API key is invalid. Check it at https://aistudio.google.com/apikey');
         e.code = 'BAD_KEY';
         throw e;
     }
     if (response.status === 429) {
-        const e = new Error('Groq rate limit hit. Try again in a minute.');
+        const e = new Error('Gemini rate limit hit. Try again in a minute.');
         e.code = 'RATE_LIMIT';
         e.retryAfter = response.headers.get('retry-after');
         throw e;
     }
     if (!response.ok) {
         const body = await response.text();
-        const e = new Error(`Groq returned ${response.status}: ${body.slice(0, 200)}`);
+        const e = new Error(`Gemini returned ${response.status}: ${body.slice(0, 200)}`);
         e.code = 'UPSTREAM';
         throw e;
     }
 
     const data = await response.json();
-    const text = data?.choices?.[0]?.message?.content;
-    if (!text) throw new Error('Empty response from Groq');
+    const candidate = data?.candidates?.[0];
+    // MAX_TOKENS means the JSON was cut off mid-object, even when partial text
+    // is present — a caller downstream can otherwise "successfully" parse a
+    // salvaged fragment of it and silently lose whole sections. Fail loudly
+    // instead, so callers retry with a bigger cap rather than saving garbage.
+    if (candidate?.finishReason === 'MAX_TOKENS') {
+        const e = new Error('Gemini response was cut off (increase maxTokens)');
+        e.code = 'TRUNCATED';
+        throw e;
+    }
+    const text = candidate?.content?.parts?.[0]?.text;
+    if (!text) throw new Error('Empty response from Gemini');
     return stripCodeFences(text);
 }
 
@@ -145,7 +168,7 @@ async function fetchWithRetry(url, options, { attempts = 4, delaysMs = [3000, 80
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 
-// Main coaching endpoint (Groq)
+// Main coaching endpoint (Gemini)
 async function handleCoach(req, res) {
     try {
         const { prompt, maxTokens } = req.body;
@@ -153,7 +176,7 @@ async function handleCoach(req, res) {
 
         const requested = Number(maxTokens);
         const cap = Number.isFinite(requested) ? Math.min(Math.max(requested, 256), 6000) : 2048;
-        const text = await callGroq(prompt, cap);
+        const text = await callGemini(prompt, cap);
         res.json({ text });
     } catch (error) {
         console.error(`🔴 Coaching error [${error.code || '?'}]:`, error.message);
@@ -237,8 +260,8 @@ app.get('/health', async (req, res) => {
         express: 'ok',
         port: PORT,
         python: 'unknown',
-        groq: GROQ_API_KEY ? 'configured' : 'no-key',
-        model: GROQ_MODEL,
+        gemini: GEMINI_API_KEY ? 'configured' : 'no-key',
+        model: GEMINI_MODEL,
         timestamp: new Date().toISOString(),
     };
 
@@ -271,14 +294,16 @@ app.listen(PORT, () => {
     console.log(`🟢 Articulate AI backend listening on http://localhost:${PORT}`);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log(`📡 AI service URL    : ${AI_SERVICE_URL}`);
-    console.log(`🧠 Groq model        : ${GROQ_MODEL}`);
-    if (GROQ_API_KEY) {
-        console.log('🔑 Groq API key      : set');
+    console.log(`🧠 Gemini model      : ${GEMINI_MODEL}`);
+    if (GEMINI_API_KEY) {
+        console.log('🔑 Gemini API key    : set');
     } else {
-        console.log('⚠️  Groq API key      : NOT SET');
-        console.log('   ↳ Get a free key at https://console.groq.com/keys');
-        console.log('   ↳ Add to api.env as: GROQ_API_KEY=your_key_here');
-        console.log('   ↳ Audio transcription still works without it.');
+        console.log('⚠️  Gemini API key    : NOT SET');
+        console.log('   ↳ Get a free key at https://aistudio.google.com/apikey');
+        console.log('   ↳ Add to api.env as: GEMINI_API_KEY=your_key_here');
+        console.log('   ↳ Coaching (/coach) will fail without it.');
     }
+    // Whisper transcription is a separate concern, handled by ai-service with
+    // its own GROQ_API_KEY — not reported here, see /health for its status.
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 });
